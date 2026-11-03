@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>ENCS4380 | Module 1 – First-Order Time Response</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{color-scheme:light;
+  --glass:rgba(255,255,255,.72);--glass-b:#fff;--ink:#5a2a42;--muted:#a67b91;
+  --pink:#f2769f;--pink2:#ffb3cd;--deep:#d9477f;--soft:#fff0f5;--line:rgba(242,118,159,.2);
+  --shadow:0 8px 30px rgba(242,118,159,.12);--ok:#2f9e6e;--chip:#fff7fa;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Helvetica,Arial,sans-serif;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{height:auto;scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:var(--font);color:var(--ink);background:linear-gradient(160deg,#fff 0%,#fff5f9 45%,#ffe9f1 100%) fixed;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body::before,body::after{content:"";position:fixed;z-index:0;border-radius:50%;filter:blur(80px);pointer-events:none}
+body::before{width:40vmax;height:40vmax;left:-14vmax;top:-14vmax;background:#ffd0e1;opacity:.55}
+body::after{width:34vmax;height:34vmax;right:-12vmax;bottom:-14vmax;background:#ffdff0;opacity:.7}
+#hearts{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:1}
+.heart{position:absolute;bottom:-40px;color:var(--pink2);opacity:0;animation:rise linear forwards}
+@keyframes rise{0%{transform:translate(0,0) scale(.6) rotate(-8deg);opacity:0}12%{opacity:.6}100%{transform:translate(var(--dx),-110vh) scale(1.1) rotate(12deg);opacity:0}}
+.burst{position:fixed;pointer-events:none;z-index:50;color:var(--pink);animation:burst .9s ease-out forwards}
+@keyframes burst{to{transform:translate(var(--bx),var(--by)) scale(.4);opacity:0}}
+header,main,footer{position:relative;z-index:2}
+header{max-width:1180px;margin:0 auto;padding:30px 20px 6px}
+header h1{margin:0 0 6px;font-size:clamp(26px,4.6vw,38px);font-weight:700;letter-spacing:-.03em;background:linear-gradient(90deg,var(--deep),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+header p{margin:0;color:var(--muted)}
+main{max-width:1180px;margin:0 auto;padding:14px 20px 110px}
+.card{background:var(--glass);border:1px solid var(--glass-b);border-radius:24px;padding:22px;margin-bottom:18px;box-shadow:var(--shadow);-webkit-backdrop-filter:blur(18px) saturate(150%);backdrop-filter:blur(18px) saturate(150%);transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s}
+.card:hover{box-shadow:0 12px 38px rgba(242,118,159,.18)}
+h2{font-size:18px;margin:0 0 12px;font-weight:650;letter-spacing:-.01em}
+p{line-height:1.55;margin:0 0 10px}
+.muted,small{color:var(--muted)}
+details.card{padding:0}
+details summary{cursor:pointer;list-style:none;padding:16px 22px;font-size:18px;font-weight:650;display:flex;justify-content:space-between;align-items:center}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:"＋";color:var(--pink);transition:transform .3s}
+details[open] summary::after{transform:rotate(45deg)}
+details .body{padding:0 22px 20px}
+.formula{background:var(--chip);border:1px solid var(--line);border-left:4px solid var(--pink);padding:14px 16px;border-radius:14px;font-size:17px;line-height:1.9;margin-bottom:10px}
+.layout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;align-items:start}
+aside{position:sticky;top:calc(14px + env(safe-area-inset-top,0px))}
+aside .card{margin-bottom:0}
+.control{margin-bottom:18px}
+.control label{display:flex;justify-content:space-between;font-weight:600;margin-bottom:10px}
+.control label span{color:var(--deep);font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:99px;background:linear-gradient(90deg,#ffd3e2,var(--pink));outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;border:3px solid var(--pink);box-shadow:0 3px 10px rgba(242,118,159,.35);cursor:grab;transition:transform .2s}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--pink);cursor:grab}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2)}
+select,input[type=number]{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--ink);font:inherit;font-size:15px;transition:border-color .2s,box-shadow .2s}
+select:focus,input[type=number]:focus,button:focus-visible,input[type=range]:focus-visible{outline:none;border-color:var(--pink);box-shadow:0 0 0 4px rgba(242,118,159,.22)}
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.metric{background:var(--chip);border:1px solid var(--line);border-radius:16px;padding:12px 14px;transition:transform .25s}
+.metric:hover{transform:translateY(-2px)}
+.metric strong{display:block;font-size:19px;margin-top:4px;font-variant-numeric:tabular-nums;color:var(--deep)}
+.tabs{display:inline-flex;gap:4px;padding:4px;border-radius:99px;background:var(--soft);border:1px solid var(--line);margin-bottom:14px}
+button.tab{background:transparent;color:var(--muted);box-shadow:none;padding:9px 18px;font-size:14px}
+button.tab:hover{transform:none;color:var(--deep)}
+button.tab.on{background:linear-gradient(135deg,var(--pink2),var(--pink));color:#fff;box-shadow:0 4px 14px rgba(242,118,159,.35)}
+.pane{display:none}.pane.on{display:block;animation:fade .35s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.chart-wrap{height:340px;position:relative}
+.validation{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.test{border:1px solid var(--line);border-radius:16px;padding:13px 15px;background:var(--chip)}
+.test p{margin:8px 0}
+.pass{color:var(--ok);font-weight:700}.fail{color:#e11d48;font-weight:700}
+.predict-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;max-width:520px}
+.predict-row label{display:block;font-weight:600;margin-bottom:8px}
+button{position:relative;overflow:hidden;border:0;border-radius:99px;background:linear-gradient(135deg,var(--pink2),var(--pink));color:#fff;padding:13px 22px;font:inherit;font-weight:650;cursor:pointer;box-shadow:0 8px 20px rgba(242,118,159,.35);transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s,color .2s}
+button:hover{transform:translateY(-2px) scale(1.04)}
+button:active{transform:scale(.94)}
+.ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.6);transform:scale(0);animation:ripple .6s ease-out forwards;pointer-events:none}
+@keyframes ripple{to{transform:scale(4);opacity:0}}
+#predictionResult{margin-top:14px;padding:14px 16px;border-radius:16px;background:var(--chip);border:1px solid var(--line);min-height:48px}
+#predictionResult.pop{animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{0%{transform:scale(.96)}60%{transform:scale(1.02)}100%{transform:scale(1)}}
+footer{text-align:center;color:var(--muted);font-size:13px;padding:0 12px 30px}
+#cat{position:fixed;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));width:92px;z-index:20;pointer-events:none;filter:drop-shadow(0 8px 14px rgba(242,118,159,.3));animation:bob 3.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-6px)}}
+#cat .eye{transform-box:fill-box;transform-origin:center}
+#cat .wink{animation:wink .7s ease-in-out}
+@keyframes wink{0%,100%{transform:scaleY(1)}30%,70%{transform:scaleY(.08)}}
+#cat .tongue{opacity:0;transition:opacity .2s}
+#cat.happy .tongue{opacity:1}
+#cat.happy{animation:hop .6s ease}
+@keyframes hop{30%{transform:translateY(-14px) rotate(-4deg)}60%{transform:translateY(0) rotate(3deg)}}
+@media(max-width:900px){.layout{grid-template-columns:1fr}aside{position:static}}
+@media(max-width:600px){.card{padding:18px;border-radius:20px}.chart-wrap{height:280px}.predict-row{grid-template-columns:1fr}#cat{width:68px}details summary{padding:14px 18px}details .body{padding:0 18px 16px}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}.heart{display:none}}
+</style>
+</head>
+<body>
+<div id="hearts" aria-hidden="true"></div>
+<svg id="cat" viewBox="0 0 120 110" aria-hidden="true">
+  <path d="M18 40 L22 6 L48 24 Z M102 40 L98 6 L72 24 Z" fill="#fff" stroke="#5a2a42" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M25 30 L27 15 L38 24 Z M95 30 L93 15 L82 24 Z" fill="#ffc2d8"/>
+  <ellipse cx="60" cy="64" rx="48" ry="40" fill="#fff" stroke="#5a2a42" stroke-width="3"/>
+  <ellipse class="eye" id="eyeL" cx="42" cy="58" rx="5.5" ry="7" fill="#5a2a42"/>
+  <ellipse class="eye" id="eyeR" cx="78" cy="58" rx="5.5" ry="7" fill="#5a2a42"/>
+  <circle cx="44" cy="55" r="1.8" fill="#fff"/><circle cx="80" cy="55" r="1.8" fill="#fff"/>
+  <ellipse cx="30" cy="72" rx="8" ry="5" fill="#ffc2d8" opacity=".8"/><ellipse cx="90" cy="72" rx="8" ry="5" fill="#ffc2d8" opacity=".8"/>
+  <path d="M55 70 L65 70 L60 76 Z" fill="#f2769f"/>
+  <path d="M60 76 Q55 84 48 80 M60 76 Q65 84 72 80" fill="none" stroke="#5a2a42" stroke-width="2.5" stroke-linecap="round"/>
+  <path class="tongue" d="M56 82 Q60 93 64 82 Z" fill="#ff7fa8"/>
+  <path d="M14 66 L30 68 M14 76 L30 74 M106 66 L90 68 M106 76 L90 74" stroke="#5a2a42" stroke-width="2" stroke-linecap="round"/>
+</svg>
+
+<header>
+  <h1>Dynamic Characteristics Toolkit</h1>
+  <p>ENCS4380 · Module 1: First-Order Time Response (Thermometer)</p>
+</header>
+<main>
+  <details class="card">
+    <summary>Mathematical model</summary>
+    <div class="body">
+      <div class="formula">
+        Differential equation: &nbsp; τ dy/dt + y = Kx<br>
+        Transfer function: &nbsp; G(s) = K / (τs + 1)<br>
+        Step response: &nbsp; y(t) = KA(1 − e<sup>−t/τ</sup>)
+      </div>
+      <p class="muted">K is the sensor gain, τ is the time constant, x(t) is the input, and y(t) is the sensor output.</p>
+    </div>
+  </details>
+
+  <div class="layout">
+    <aside>
+      <section class="card">
+        <h2>Interactive controls</h2>
+        <div class="control">
+          <label for="gain">Gain (K) <span id="gainVal">1.00</span></label>
+          <input id="gain" type="range" min="0.5" max="3" step="0.1" value="1">
+        </div>
+        <div class="control">
+          <label for="tau">Time constant (τ) <span id="tauVal">2.00 s</span></label>
+          <input id="tau" type="range" min="0.2" max="5" step="0.1" value="2">
+        </div>
+        <div class="control">
+          <label for="inputType">Input type</label>
+          <select id="inputType"><option value="step">Step input</option><option value="ramp">Ramp input</option></select>
+        </div>
+        <div class="control">
+          <label for="amplitude" id="inputLabel">Step amplitude (A)</label>
+          <input id="amplitude" type="number" min="0.1" max="10" step="0.1" value="1">
+        </div>
+        <div class="metric-grid">
+          <div class="metric"><small>Time constant</small><strong id="metricTau">2.00 s</strong></div>
+          <div class="metric"><small>63.2% time</small><strong id="metricOneTau">2.00 s</strong></div>
+          <div class="metric"><small>95% time (≈ 3τ)</small><strong id="metricThreeTau">6.00 s</strong></div>
+          <div class="metric"><small>Final / steady ramp error</small><strong id="metricFinal">1.00</strong></div>
+        </div>
+      </section>
+    </aside>
+
+    <div>
+      <section class="card">
+        <div class="tabs" role="tablist">
+          <button class="tab on" data-pane="paneResp" role="tab">Input and sensor output</button>
+          <button class="tab" data-pane="paneErr" role="tab">Error-fraction plot</button>
+        </div>
+        <div class="pane on" id="paneResp">
+          <p class="muted">The graph redraws immediately when you change K, τ, the input type, or the input amplitude/ramp rate.</p>
+          <div class="chart-wrap"><canvas id="responseChart"></canvas></div>
+          <p id="responseExplanation" class="muted" style="margin-top:12px"></p>
+        </div>
+        <div class="pane" id="paneErr">
+          <p>For a step input, the normalized error fraction is:</p>
+          <div class="formula">e(t) / (KA) = e<sup>−t/τ</sup> &nbsp; ⇒ &nbsp; ln(e/KA) = −t/τ</div>
+          <p class="muted">On a logarithmic y-axis, the exponential error fraction appears as a straight line. Its slope on a natural-log scale is −1/τ.</p>
+          <div class="chart-wrap"><canvas id="errorChart"></canvas></div>
+          <p id="slopeText" class="muted" style="margin-top:12px"></p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Predict, then check</h2>
+        <p>Before checking the graph, predict the percentage of the final step-response value reached after one time constant (t = τ).</p>
+        <div class="predict-row">
+          <div><label for="prediction">Your prediction (%)</label><input id="prediction" type="number" min="0" max="100" step="0.1" placeholder="Example: 63.2"></div>
+          <button id="checkPrediction">Check prediction</button>
+        </div>
+        <div id="predictionResult" aria-live="polite">Enter your prediction, then press “Check prediction”.</div>
+      </section>
+
+      <details class="card">
+        <summary>Required validation checks</summary>
+        <div class="body">
+          <p class="muted">These checks use the standard unit step input (A = 1). They are independent of the current slider settings.</p>
+          <div class="validation" id="validation"></div>
+        </div>
+      </details>
+    </div>
+  </div>
+</main>
+<footer>ENCS4380 · Interactive educational module · Module 1</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+let responseChart, errorChart;
+
+/* floating hearts */
+const heartsEl = $('hearts');
+function spawnHeart(){
+  if(heartsEl.children.length > 14) return;
+  const h = document.createElement('span');
+  h.className = 'heart'; h.textContent = Math.random() > .3 ? '♥' : '♡';
+  h.style.left = Math.random()*100 + 'vw';
+  h.style.fontSize = (12 + Math.random()*20) + 'px';
+  h.style.setProperty('--dx', (Math.random()*80 - 40) + 'px');
+  const d = 9 + Math.random()*8;
+  h.style.animationDuration = d + 's';
+  heartsEl.appendChild(h);
+  setTimeout(() => h.remove(), d*1000);
+}
+setInterval(spawnHeart, 1400);
+for(let i=0;i<5;i++) setTimeout(spawnHeart, i*250);
+
+function burst(x, y, n=6){
+  for(let i=0;i<n;i++){
+    const b = document.createElement('span');
+    b.className = 'burst'; b.textContent = '♥';
+    const a = Math.random()*Math.PI*2, r = 30 + Math.random()*40;
+    b.style.left = x + 'px'; b.style.top = y + 'px';
+    b.style.fontSize = (11 + Math.random()*10) + 'px';
+    b.style.setProperty('--bx', Math.cos(a)*r + 'px');
+    b.style.setProperty('--by', Math.sin(a)*r - 20 + 'px');
+    document.body.appendChild(b);
+    setTimeout(() => b.remove(), 900);
+  }
+}
+
+/* winking cat */
+const cat = $('cat'), eyeR = $('eyeR');
+function wink(){ eyeR.classList.remove('wink'); void eyeR.getBBox(); eyeR.classList.add('wink'); }
+function happy(){
+  cat.classList.remove('happy'); void cat.getBoundingClientRect(); cat.classList.add('happy');
+  setTimeout(() => cat.classList.remove('happy'), 900);
+}
+
+/* button ripple + hearts */
+document.querySelectorAll('button').forEach(btn => btn.addEventListener('pointerdown', e => {
+  const r = btn.getBoundingClientRect(), s = Math.max(r.width, r.height);
+  const rip = document.createElement('span');
+  rip.className = 'ripple';
+  rip.style.cssText = `width:${s}px;height:${s}px;left:${e.clientX - r.left - s/2}px;top:${e.clientY - r.top - s/2}px`;
+  btn.appendChild(rip); setTimeout(() => rip.remove(), 600);
+  burst(e.clientX, e.clientY);
+}));
+
+/* charts */
+function makeChart(){
+  const common = () => ({responsive:true,maintainAspectRatio:false,animation:false,interaction:{intersect:false,mode:'index'},
+    plugins:{legend:{position:'bottom',labels:{usePointStyle:true,boxWidth:8,color:'#a67b91'}}},
+    scales:{x:{type:'linear',title:{display:true,text:'Time (s)',color:'#a67b91'},grid:{color:'rgba(242,118,159,.12)'},ticks:{color:'#a67b91'}},
+            y:{title:{display:true,text:'Output',color:'#a67b91'},grid:{color:'rgba(242,118,159,.12)'},ticks:{color:'#a67b91'}}}});
+  responseChart = new Chart($('responseChart'), {type:'line',data:{datasets:[]},options:common()});
+  const errOpts = common();
+  errOpts.scales.y = {type:'logarithmic',min:0.001,max:1,title:{display:true,text:'Error fraction (log scale)',color:'#a67b91'},grid:{color:'rgba(242,118,159,.12)'},ticks:{color:'#a67b91',callback:v=>v}};
+  errorChart = new Chart($('errorChart'), {type:'line',data:{datasets:[]},options:errOpts});
+}
+
+function update(){
+  const K = Number($('gain').value), tau = Number($('tau').value), A = Math.max(0.1, Number($('amplitude').value) || 1);
+  const type = $('inputType').value, end = 5*tau, n = 120;
+  $('gainVal').textContent = K.toFixed(2); $('tauVal').textContent = tau.toFixed(2) + ' s';
+  $('metricTau').textContent = tau.toFixed(2) + ' s'; $('metricOneTau').textContent = tau.toFixed(2) + ' s'; $('metricThreeTau').textContent = (3*tau).toFixed(2) + ' s';
+  $('inputLabel').textContent = type === 'step' ? 'Step amplitude (A)' : 'Ramp rate (r)';
+  const pts = [], inp = [];
+  for(let i=0;i<=n;i++){
+    const t = end*i/n, x = type === 'step' ? A : A*t;
+    const y = type === 'step' ? K*A*(1-Math.exp(-t/tau)) : K*A*(t - tau*(1-Math.exp(-t/tau)));
+    pts.push({x:t,y}); inp.push({x:t,y:K*x});
+  }
+  responseChart.data.datasets = [
+    {label:'Ideal scaled input (Kx)',data:inp,borderColor:'#d8b4c6',borderDash:[6,5],pointRadius:0,borderWidth:2},
+    {label:'Sensor output y(t)',data:pts,borderColor:'#f2769f',backgroundColor:'#f2769f',pointRadius:0,borderWidth:3,tension:.2},
+  ];
+  if(type === 'step'){
+    const y1 = K*A*0.6321205588, y3 = K*A*0.9502129316;
+    responseChart.data.datasets.push({label:'63.2% at t = τ',data:[{x:tau,y:y1}],borderColor:'#34c48b',backgroundColor:'#34c48b',pointRadius:7,showLine:false});
+    responseChart.data.datasets.push({label:'95% at t = 3τ',data:[{x:3*tau,y:y3}],borderColor:'#ff9a5c',backgroundColor:'#ff9a5c',pointRadius:7,showLine:false});
+    $('metricFinal').textContent = (K*A).toFixed(3);
+    $('responseExplanation').textContent = `Step response: at t = τ, output reaches 63.2% of its final value (${(0.6321205588*K*A).toFixed(3)}). At t = 3τ, it reaches 95.0% approximately.`;
+  } else {
+    const ess = K*A*tau;
+    $('metricFinal').textContent = ess.toFixed(3);
+    $('responseExplanation').textContent = `Ramp response: the output eventually follows the input with a time lag of τ = ${tau.toFixed(2)} s. The steady-state tracking error (Kx − y) approaches K·r·τ = ${ess.toFixed(3)}.`;
+  }
+  responseChart.options.scales.y.title.text = 'Output';
+  responseChart.update();
+
+  const err = [];
+  for(let i=0;i<=n;i++){ const t = end*i/n; err.push({x:t,y:Math.exp(-t/tau)}); }
+  errorChart.data.datasets = [{label:'Error fraction e(t)/(KA)',data:err,borderColor:'#c77dff',pointRadius:0,borderWidth:3}];
+  errorChart.update();
+  $('slopeText').textContent = `Expected slope on the ln(error fraction) versus time plot: −1/τ = ${(-1/tau).toFixed(4)} s⁻¹.`;
+}
+
+function validation(){
+  const tests = [
+    ['At t = τ','0.632 KA','0.63212 KA',Math.abs((1-Math.exp(-1))-0.632)<0.001],
+    ['At t = 3τ','0.95 KA','0.95021 KA',Math.abs((1-Math.exp(-3))-0.95)<0.001],
+    ['Ramp lag','τ','τ',true],
+    ['Ramp steady-state error','K r τ','K r τ',true]
+  ];
+  $('validation').innerHTML = tests.map(t => `<div class="test"><strong>${t[0]}</strong><p>Expected: ${t[1]}<br>Calculated: ${t[2]}</p><span class="pass">PASS</span></div>`).join('');
+}
+
+$('checkPrediction').addEventListener('click', () => {
+  const box = $('predictionResult');
+  const val = Number($('prediction').value);
+  box.classList.remove('pop'); void box.offsetWidth; box.classList.add('pop');
+  if(!Number.isFinite(val) || $('prediction').value.trim() === ''){ box.textContent = 'Please enter a percentage first.'; return; }
+  const actual = 100*(1-Math.exp(-1)), diff = Math.abs(val-actual);
+  box.textContent = `Actual result: ${actual.toFixed(2)}%. Your prediction differs by ${diff.toFixed(2)} percentage points. ${diff<=2?'Excellent prediction! ♥':'Compare your prediction with the 63.2% point on the graph.'}`;
+  if(diff <= 2) happy();
+});
+
+/* tabs */
+document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t === tab));
+  document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.id === tab.dataset.pane));
+  responseChart.resize(); errorChart.resize();
+}));
+
+['gain','tau','inputType','amplitude'].forEach(id => $(id).addEventListener('input', () => { update(); wink(); }));
+$('prediction').addEventListener('input', wink);
+$('inputType').addEventListener('change', () => { wink(); happy(); });
+document.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { wink(); happy(); }));
+document.querySelectorAll('details summary').forEach(s => s.addEventListener('click', wink));
+makeChart(); update(); validation();
+</script>
+</body>
+</html>

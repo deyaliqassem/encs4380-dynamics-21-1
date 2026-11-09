@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>ENCS4380 | Module 1 – First-Order Time Response</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{color-scheme:light;
+  --glass:rgba(255,255,255,.72);--glass-b:#fff;--ink:#5a2a42;--muted:#a67b91;
+  --pink:#f2769f;--pink2:#ffb3cd;--deep:#d9477f;--soft:#fff0f5;--line:rgba(242,118,159,.2);
+  --shadow:0 8px 30px rgba(242,118,159,.12);--ok:#2f9e6e;--chip:#fff7fa;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Helvetica,Arial,sans-serif;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{height:auto;scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:var(--font);color:var(--ink);background:linear-gradient(160deg,#fff 0%,#fff5f9 45%,#ffe9f1 100%) fixed;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body::before,body::after{content:"";position:fixed;z-index:0;border-radius:50%;filter:blur(80px);pointer-events:none}
+body::before{width:40vmax;height:40vmax;left:-14vmax;top:-14vmax;background:#ffd0e1;opacity:.55}
+body::after{width:34vmax;height:34vmax;right:-12vmax;bottom:-14vmax;background:#ffdff0;opacity:.7}
+#hearts{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:1}
+.heart{position:absolute;bottom:-40px;color:var(--pink2);opacity:0;animation:rise linear forwards}
+@keyframes rise{0%{transform:translate(0,0) scale(.6) rotate(-8deg);opacity:0}12%{opacity:.6}100%{transform:translate(var(--dx),-110vh) scale(1.1) rotate(12deg);opacity:0}}
+.burst{position:fixed;pointer-events:none;z-index:50;color:var(--pink);animation:burst .9s ease-out forwards}
+@keyframes burst{to{transform:translate(var(--bx),var(--by)) scale(.4);opacity:0}}
+header,main,footer{position:relative;z-index:2}
+header{max-width:1180px;margin:0 auto;padding:30px 20px 6px}
+header h1{margin:0 0 6px;font-size:clamp(26px,4.6vw,38px);font-weight:700;letter-spacing:-.03em;background:linear-gradient(90deg,var(--deep),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+header p{margin:0;color:var(--muted)}
+main{max-width:1180px;margin:0 auto;padding:14px 20px 110px}
+.card{background:var(--glass);border:1px solid var(--glass-b);border-radius:24px;padding:22px;margin-bottom:18px;box-shadow:var(--shadow);-webkit-backdrop-filter:blur(18px) saturate(150%);backdrop-filter:blur(18px) saturate(150%);transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s}
+.card:hover{box-shadow:0 12px 38px rgba(242,118,159,.18)}
+h2{font-size:18px;margin:0 0 12px;font-weight:650;letter-spacing:-.01em}
+p{line-height:1.55;margin:0 0 10px}
+.muted,small{color:var(--muted)}
+details.card{padding:0}
+details summary{cursor:pointer;list-style:none;padding:16px 22px;font-size:18px;font-weight:650;display:flex;justify-content:space-between;align-items:center}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:"＋";color:var(--pink);transition:transform .3s}
+details[open] summary::after{transform:rotate(45deg)}
+details .body{padding:0 22px 20px}
+.formula{background:var(--chip);border:1px solid var(--line);border-left:4px solid var(--pink);padding:14px 16px;border-radius:14px;font-size:17px;line-height:1.9;margin-bottom:10px}
+.layout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;align-items:start}
+aside{position:sticky;top:calc(14px + env(safe-area-inset-top,0px))}
+aside .card{margin-bottom:0}
+.control{margin-bottom:18px}
+.control label{display:flex;justify-content:space-between;font-weight:600;margin-bottom:10px}
+.control label span{color:var(--deep);font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:99px;background:linear-gradient(90deg,#ffd3e2,var(--pink));outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;border:3px solid var(--pink);box-shadow:0 3px 10px rgba(242,118,159,.35);cursor:grab;transition:transform .2s}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--pink);cursor:grab}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2)}
+select,input[type=number]{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--ink);font:inherit;font-size:15px;transition:border-color .2s,box-shadow .2s}
+select:focus,input[type=number]:focus,button:focus-visible,input[type=range]:focus-visible{outline:none;border-color:var(--pink);box-shadow:0 0 0 4px rgba(242,118,159,.22)}
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.metric{background:var(--chip);border:1px solid var(--line);border-radius:16px;padding:12px 14px;transition:transform .25s}
+.metric:hover{transform:translateY(-2px)}
+.metric strong{display:block;font-size:19px;margin-top:4px;font-variant-numeric:tabular-nums;color:var(--deep)}
+.tabs{display:inline-flex;gap:4px;padding:4px;border-radius:99px;background:var(--soft);border:1px solid var(--line);margin-bottom:14px}
+button.tab{background:transparent;color:var(--muted);box-shadow:none;padding:9px 18px;font-size:14px}
+button.tab:hover{transform:none;color:var(--deep)}
+button.tab.on{background:linear-gradient(135deg,var(--pink2),var(--pink));color:#fff;box-shadow:0 4px 14px rgba(242,118,159,.35)}
+.pane{display:none}.pane.on{display:block;animation:fade .35s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.chart-wrap{height:340px;position:relative}
+.validation{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.test{border:1px solid var(--line);border-radius:16px;padding:13px 15px;background:var(--chip)}
+.test p{margin:8px 0}
+.pass{color:var(--ok);font-weight:700}.fail{color:#e11d48;font-weight:700}
+.predict-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;max-width:520px}
+.predict-row label{display:block;font-weight:600;margin-bottom:8px}
+button{position:relative;overflow:hidden;border:0;border-radius:99px;background:linear-gradient(135deg,var(--pink2),var(--pink));color:#fff;padding:13px 22px;font:inherit;font-weight:650;cursor:pointer;box-shadow:0 8px 20px rgba(242,118,159,.35);transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s,color .2s}
+button:hover{transform:translateY(-2px) scale(1.04)}
+button:active{transform:scale(.94)}
+.ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.6);transform:scale(0);animation:ripple .6s ease-out forwards;pointer-events:none}
+@keyframes ripple{to{transform:scale(4);opacity:0}}
+#predictionResult{margin-top:14px;padding:14px 16px;border-radius:16px;background:var(--chip);border:1px solid var(--line);min-height:48px}
+#predictionResult.pop{animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{0%{transform:scale(.96)}60%{transform:scale(1.02)}100%{transform:scale(1)}}
+footer{text-align:center;color:var(--muted);font-size:13px;padding:0 12px 30px}
+#cat{position:fixed;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));width:92px;z-index:20;pointer-events:none;filter:drop-shadow(0 8px 14px rgba(242,118,159,.3));animation:bob 3.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-6px)}}
+#cat .eye{transform-box:fill-box;transform-origin:center}
+#cat .wink{animation:wink .7s ease-in-out}
+@keyframes wink{0%,100%{transform:scaleY(1)}30%,70%{transform:scaleY(.08)}}
+#cat .tongue{opacity:0;transition:opacity .2s}
+#cat.happy .tongue{opacity:1}
+#cat.happy{animation:hop .6s ease}
+@keyframes hop{30%{transform:translateY(-14px) rotate(-4deg)}60%{transform:translateY(0) rotate(3deg)}}
+@media(max-width:900px){.layout{grid-template-columns:1fr}aside{position:static}}
+@media(max-width:600px){.card{padding:18px;border-radius:20px}.chart-wrap{height:280px}.predict-row{grid-template-columns:1fr}#cat{width:68px}details summary{padding:14px 18px}details .body{padding:0 18px 16px}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}.heart{display:none}}
+
+/* ===== multi-module additions ===== */
+aside{top:calc(78px + env(safe-area-inset-top,0px))}
+aside.scroll{max-height:calc(100vh - 92px);overflow-y:auto}
+.modnav{position:sticky;top:0;z-index:30;padding:calc(8px + env(safe-area-inset-top,0px)) 14px 6px}
+.modnav .pill{max-width:1180px;margin:0 auto;display:flex;gap:6px;padding:6px;border-radius:99px;background:var(--glass);border:1px solid var(--glass-b);box-shadow:var(--shadow);-webkit-backdrop-filter:blur(18px) saturate(150%);backdrop-filter:blur(18px) saturate(150%);overflow-x:auto;scrollbar-width:none}
+.modnav .pill::-webkit-scrollbar{display:none}
+button.navbtn,button.mtab{background:transparent;color:var(--muted);box-shadow:none;padding:10px 18px;font-size:14px;white-space:nowrap}
+button.navbtn{flex:1 0 auto}
+button.navbtn:hover,button.mtab:hover{transform:none;color:var(--deep)}
+button.navbtn.on,button.mtab.on{background:linear-gradient(135deg,var(--pink2),var(--pink));color:#fff;box-shadow:0 4px 14px rgba(242,118,159,.35)}
+.mod{display:none}.mod.on{display:block;animation:fade .35s ease}
+.mpane{display:none}.mpane.on{display:block;animation:fade .35s ease}
+.tabs.wrap{display:flex;flex-wrap:wrap;border-radius:22px}
+.field label{display:block;font-weight:600;margin-bottom:8px;font-size:14px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:14px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:18px;align-items:start}
+.metric-grid.wide{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.chart-wrap.sm{height:230px;margin-bottom:12px}
+.chart-wrap.sq{height:330px}
+.result{margin-top:14px;padding:14px 16px;border-radius:16px;background:var(--chip);border:1px solid var(--line);min-height:48px;line-height:1.5}
+.result.pop{animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+.eqrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:17px;margin-bottom:14px}
+.mat{display:inline-grid;grid-template-columns:repeat(var(--c),auto);gap:6px 18px;padding:6px 12px;border-left:2px solid var(--deep);border-right:2px solid var(--deep);border-radius:8px;font-variant-numeric:tabular-nums;text-align:center}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+button.ghost{background:var(--chip);color:var(--deep);border:1px solid var(--line);box-shadow:none;padding:10px 16px;font-size:14px}
+.pill-ok{display:inline-block;padding:2px 10px;border-radius:99px;background:#e6f7ef;color:var(--ok);font-weight:700;font-size:13px}
+@media(max-width:900px){.two{grid-template-columns:1fr}aside.scroll{max-height:none}}
+@media(max-width:600px){button.navbtn{padding:10px 14px;font-size:13px}.chart-wrap.sq{height:280px}}
+</style>
+</head>
+<body>
+<div id="hearts" aria-hidden="true"></div>
+<svg id="cat" viewBox="0 0 120 110" aria-hidden="true">
+  <path d="M18 40 L22 6 L48 24 Z M102 40 L98 6 L72 24 Z" fill="#fff" stroke="#5a2a42" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M25 30 L27 15 L38 24 Z M95 30 L93 15 L82 24 Z" fill="#ffc2d8"/>
+  <ellipse cx="60" cy="64" rx="48" ry="40" fill="#fff" stroke="#5a2a42" stroke-width="3"/>
+  <ellipse class="eye" id="eyeL" cx="42" cy="58" rx="5.5" ry="7" fill="#5a2a42"/>
+  <ellipse class="eye" id="eyeR" cx="78" cy="58" rx="5.5" ry="7" fill="#5a2a42"/>
+  <circle cx="44" cy="55" r="1.8" fill="#fff"/><circle cx="80" cy="55" r="1.8" fill="#fff"/>
+  <ellipse cx="30" cy="72" rx="8" ry="5" fill="#ffc2d8" opacity=".8"/><ellipse cx="90" cy="72" rx="8" ry="5" fill="#ffc2d8" opacity=".8"/>
+  <path d="M55 70 L65 70 L60 76 Z" fill="#f2769f"/>
+  <path d="M60 76 Q55 84 48 80 M60 76 Q65 84 72 80" fill="none" stroke="#5a2a42" stroke-width="2.5" stroke-linecap="round"/>
+  <path class="tongue" d="M56 82 Q60 93 64 82 Z" fill="#ff7fa8"/>
+  <path d="M14 66 L30 68 M14 76 L30 74 M106 66 L90 68 M106 76 L90 74" stroke="#5a2a42" stroke-width="2" stroke-linecap="round"/>
+</svg>
+
+<header>
+  <h1>Dynamic Characteristics Toolkit</h1>
+  <p id="subtitle">ENCS4380 · Module 1: First-Order Time Response (Thermometer)</p>
+</header>
+<nav class="modnav" aria-label="Modules"><div class="pill">
+  <button class="navbtn on" data-mod="1">1 · Time response</button>
+  <button class="navbtn" data-mod="2">2 · Frequency response</button>
+  <button class="navbtn" data-mod="3">3 · Second-order</button>
+</div></nav>
+
+<main>
+<section class="mod on" id="mod1">
+  <details class="card">
+    <summary>Mathematical model</summary>
+    <div class="body">
+      <div class="formula">
+        Differential equation: &nbsp; τ dy/dt + y = Kx<br>
+        Transfer function: &nbsp; G(s) = K / (τs + 1)<br>
+        Step response: &nbsp; y(t) = KA(1 − e<sup>−t/τ</sup>)
+      </div>
+      <p class="muted">K is the sensor gain, τ is the time constant, x(t) is the input, and y(t) is the sensor output.</p>
+    </div>
+  </details>
+
+  <div class="layout">
+    <aside>
+      <section class="card">
+        <h2>Interactive controls</h2>
+        <div class="control">
+          <label for="gain">Gain (K) <span id="gainVal">1.00</span></label>
+          <input id="gain" type="range" min="0.5" max="3" step="0.1" value="1">
+        </div>
+        <div class="control">
+          <label for="tau">Time constant (τ) <span id="tauVal">2.00 s</span></label>
+          <input id="tau" type="range" min="0.2" max="5" step="0.1" value="2">
+        </div>
+        <div class="control">
+          <label for="inputType">Input type</label>
+          <select id="inputType"><option value="step">Step input</option><option value="ramp">Ramp input</option></select>
+        </div>
+        <div class="control">
+          <label for="amplitude" id="inputLabel">Step amplitude (A)</label>
+          <input id="amplitude" type="number" min="0.1" max="10" step="0.1" value="1">
+        </div>
+        <div class="metric-grid">
+          <div class="metric"><small>Time constant</small><strong id="metricTau">2.00 s</strong></div>
+          <div class="metric"><small>63.2% time</small><strong id="metricOneTau">2.00 s</strong></div>
+          <div class="metric"><small>95% time (≈ 3τ)</small><strong id="metricThreeTau">6.00 s</strong></div>
+          <div class="metric"><small>Final / steady ramp error</small><strong id="metricFinal">1.00</strong></div>
+        </div>
+      </section>
+    </aside>
+
+    <div>
+      <section class="card">
+        <div class="tabs" role="tablist">
+          <button class="tab on" data-pane="paneResp" role="tab">Input and sensor output</button>
+          <button class="tab" data-pane="paneErr" role="tab">Error-fraction plot</button>
+        </div>
+        <div class="pane on" id="paneResp">
+          <p class="muted">The graph redraws immediately when you change K, τ, the input type, or the input amplitude/ramp rate.</p>
+          <div class="chart-wrap"><canvas id="responseChart"></canvas></div>
+          <p id="responseExplanation" class="muted" style="margin-top:12px"></p>
+        </div>
+        <div class="pane" id="paneErr">
+          <p>For a step input, the normalized error fraction is:</p>
+          <div class="formula">e(t) / (KA) = e<sup>−t/τ</sup> &nbsp; ⇒ &nbsp; ln(e/KA) = −t/τ</div>
+          <p class="muted">On a logarithmic y-axis, the exponential error fraction appears as a straight line. Its slope on a natural-log scale is −1/τ.</p>
+          <div class="chart-wrap"><canvas id="errorChart"></canvas></div>
+          <p id="slopeText" class="muted" style="margin-top:12px"></p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Predict, then check</h2>
+        <p>Before checking the graph, predict the percentage of the final step-response value reached after one time constant (t = τ).</p>
+        <div class="predict-row">
+          <div><label for="prediction">Your prediction (%)</label><input id="prediction" type="number" min="0" max="100" step="0.1" placeholder="Example: 63.2"></div>
+          <button id="checkPrediction">Check prediction</button>
+        </div>
+        <div id="predictionResult" aria-live="polite">Enter your prediction, then press “Check prediction”.</div>
+      </section>
+
+      <details class="card">
+        <summary>Required validation checks</summary>
+        <div class="body">
+          <p class="muted">These checks use the standard unit step input (A = 1). They are independent of the current slider settings.</p>
+          <div class="validation" id="validation"></div>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+<section class="mod" id="mod2">
+  <details class="card">
+    <summary>Mathematical model</summary>
+    <div class="body">
+      <div class="formula">
+        Sine input: &nbsp; x(t) = A sin ωt<br>
+        Amplitude ratio: &nbsp; M = 1 / √(1 + (ωτ)²)<br>
+        Phase: &nbsp; φ = −tan<sup>−1</sup>(ωτ)<br>
+        Cutoff: &nbsp; ω<sub>c</sub> = 1/τ &nbsp; (M = 0.707, −3 dB, φ = −45°)<br>
+        Dynamic error: &nbsp; δ = M − 1
+      </div>
+      <p class="muted">The time plot starts the sensor at rest, so you see the start-up transient fade into the steady-state sine: y(t) = A/(1+ω²τ²) · [ωτ e<sup>−t/τ</sup> + sin ωt − ωτ cos ωt].</p>
+    </div>
+  </details>
+
+  <div class="layout">
+    <aside class="scroll">
+      <section class="card">
+        <h2>Interactive controls</h2>
+        <div class="control"><label for="tau2">Time constant (τ) <span id="tau2Val"></span></label>
+          <input id="tau2" type="range" min="0.05" max="5" step="0.05" value="0.5"></div>
+        <div class="control"><label for="w2">Input frequency (ω) <span id="w2Val"></span></label>
+          <input id="w2" type="range" min="-1" max="2" step="0.01" value="0.5"></div>
+        <div class="btn-row" style="margin-bottom:18px"><button class="ghost" id="jumpWc">Jump to cutoff ω = 1/τ</button></div>
+        <div class="metric-grid">
+          <div class="metric"><small>Amplitude ratio M</small><strong id="m2M"></strong></div>
+          <div class="metric"><small>Magnitude</small><strong id="m2dB"></strong></div>
+          <div class="metric"><small>Phase φ</small><strong id="m2ph"></strong></div>
+          <div class="metric"><small>Time lag</small><strong id="m2lag"></strong></div>
+          <div class="metric"><small>Dynamic error δ</small><strong id="m2err"></strong></div>
+          <div class="metric"><small>Cutoff ω<sub>c</sub></small><strong id="m2wc"></strong></div>
+        </div>
+      </section>
+    </aside>
+
+    <div>
+      <section class="card">
+        <div class="tabs wrap">
+          <button class="mtab on" data-g="m2" data-p="m2time">Input and output sines</button>
+          <button class="mtab" data-g="m2" data-p="m2bode">Bode plot</button>
+        </div>
+        <div class="mpane on" id="m2time" data-g="m2">
+          <p class="muted">Drag ω: the output shrinks and slides to the right (lags) as ωτ grows.</p>
+          <div class="chart-wrap"><canvas id="c2time"></canvas></div>
+          <p id="m2expl" class="muted" style="margin-top:12px"></p>
+        </div>
+        <div class="mpane" id="m2bode" data-g="m2">
+          <p class="muted">Dashed lines are the straight-line asymptotes. They meet at the cutoff ω = 1/τ, where the true curve is 3 dB down and the phase is −45°.</p>
+          <div class="chart-wrap sm"><canvas id="c2mag"></canvas></div>
+          <div class="chart-wrap sm"><canvas id="c2phase"></canvas></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Dynamic-error calculator</h2>
+        <p class="muted">How slow can a sensor be for a given signal and error budget? Solve M = 1 − e for τ, then test a sensor of your own.</p>
+        <div class="grid2">
+          <div class="field"><label for="cf">Signal frequency (Hz)</label><input id="cf" type="number" min="0.001" step="any" value="100"></div>
+          <div class="field"><label for="ce">Max dynamic error (%)</label><input id="ce" type="number" min="0.01" max="99" step="any" value="5"></div>
+          <div class="field"><label for="ct">Your sensor τ (ms)</label><input id="ct" type="number" min="0.001" step="any" value="0.8"></div>
+          <div class="field"><label for="cp">Phase check at (Hz)</label><input id="cp" type="number" min="0.001" step="any" value="50"></div>
+        </div>
+        <div class="metric-grid wide" id="calcOut"></div>
+        <p id="calcMsg" class="muted" style="margin-top:12px"></p>
+      </section>
+
+      <section class="card">
+        <h2>Predict, then check</h2>
+        <p>Before touching the slider: when the input frequency equals the cutoff (ω = 1/τ), what fraction of the input amplitude reaches the output, and how many degrees does it lag?</p>
+        <div class="grid2" style="max-width:520px">
+          <div class="field"><label for="p2a">Amplitude (% of input)</label><input id="p2a" type="number" min="0" max="150" step="0.1" placeholder="Example: 50"></div>
+          <div class="field"><label for="p2p">Phase lag (°)</label><input id="p2p" type="number" min="0" max="180" step="0.1" placeholder="Example: 30"></div>
+        </div>
+        <button id="p2btn">Check prediction</button>
+        <div class="result" id="p2res" aria-live="polite">Enter both predictions, then press “Check prediction”.</div>
+      </section>
+
+      <details class="card">
+        <summary>Required validation checks</summary>
+        <div class="body">
+          <p class="muted">Computed live from the same formulas the plots use, independent of the slider settings.</p>
+          <div class="validation" id="v2"></div>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="mod" id="mod3">
+  <details class="card">
+    <summary>Mathematical model</summary>
+    <div class="body">
+      <div class="formula">
+        Transfer function: &nbsp; G(s) = Kω<sub>n</sub>² / (s² + 2ζω<sub>n</sub>s + ω<sub>n</sub>²)<br>
+        Mass-spring-damper: &nbsp; m ẍ + b ẋ + k x = F(t) &nbsp; ⇒ &nbsp; ω<sub>n</sub> = √(k/m), &nbsp; ζ = b / (2√(km))<br>
+        Poles: &nbsp; s = −ζω<sub>n</sub> ± ω<sub>n</sub>√(ζ² − 1)<br>
+        Overshoot: &nbsp; M<sub>p</sub> = 100·e<sup>−πζ/√(1−ζ²)</sup> %, &nbsp; peak time t<sub>p</sub> = π / (ω<sub>n</sub>√(1−ζ²))
+      </div>
+      <p class="muted">Plots show the normalised step response (K = 1, final value 1). Move ζ and ω<sub>n</sub>, or m, b and k: the five sliders stay in sync.</p>
+    </div>
+  </details>
+
+  <div class="layout">
+    <aside class="scroll">
+      <section class="card">
+        <h2>Interactive controls</h2>
+        <div class="control"><label for="sz">Damping ratio (ζ) <span id="szVal"></span></label>
+          <input id="sz" type="range" min="0.05" max="3" step="0.01" value="0.5"></div>
+        <div class="control"><label for="sw">Natural frequency (ω<sub>n</sub>) <span id="swVal"></span></label>
+          <input id="sw" type="range" min="0.5" max="10" step="0.01" value="2"></div>
+        <hr style="border:0;border-top:1px solid var(--line);margin:4px 0 18px">
+        <div class="control"><label for="sm">Mass m <span id="smVal"></span></label>
+          <input id="sm" type="range" min="0.5" max="5" step="0.1" value="1"></div>
+        <div class="control"><label for="sb">Damping b <span id="sbVal"></span></label>
+          <input id="sb" type="range" min="0.1" max="40" step="0.01" value="2"></div>
+        <div class="control" style="margin-bottom:0"><label for="sk">Stiffness k <span id="skVal"></span></label>
+          <input id="sk" type="range" min="0.5" max="80" step="0.01" value="4"></div>
+      </section>
+    </aside>
+
+    <div>
+      <section class="card">
+        <div class="tabs wrap">
+          <button class="mtab on" data-g="m3" data-p="m3step">Step response</button>
+          <button class="mtab" data-g="m3" data-p="m3spl">Poles (s-plane)</button>
+        </div>
+        <div class="mpane on" id="m3step" data-g="m3">
+          <div class="chart-wrap sq"><canvas id="c3step"></canvas></div>
+          <p id="m3expl" class="muted" style="margin-top:12px"></p>
+        </div>
+        <div class="mpane" id="m3spl" data-g="m3">
+          <p class="muted">Poles are the ✕ marks. Underdamped poles sit on a circle of radius ω<sub>n</sub>, at an angle set by ζ (cos θ = ζ). Further left means faster decay.</p>
+          <div class="chart-wrap sq"><canvas id="c3s"></canvas></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Live response metrics</h2>
+        <div class="metric-grid wide">
+          <div class="metric"><small>Damping case</small><strong id="m3case"></strong></div>
+          <div class="metric"><small>Rise time (10–90%)</small><strong id="m3tr"></strong></div>
+          <div class="metric"><small>Peak time</small><strong id="m3tp"></strong></div>
+          <div class="metric"><small>Overshoot (from curve)</small><strong id="m3os"></strong></div>
+          <div class="metric"><small>Settling time (2%)</small><strong id="m3ts"></strong></div>
+          <div class="metric"><small>Poles</small><strong id="m3pl" style="font-size:16px"></strong></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>State-space panel</h2>
+        <p class="muted">Same mass-spring-damper with x₁ = x and x₂ = ẋ. A and B update as you move m, b and k. The step force is F = k, so x settles at 1, matching G(s) with K = 1.</p>
+        <div class="eqrow">ẋ =
+          <span class="mat" id="matA" style="--c:2"></span> x +
+          <span class="mat" id="matB" style="--c:1"></span> F(t),
+          &nbsp; y = <span class="mat" style="--c:2"><span>1</span><span>0</span></span> x
+        </div>
+        <div class="two">
+          <div>
+            <div class="metric-grid" style="grid-template-columns:1fr">
+              <div class="metric"><small>Eigenvalues of A</small><strong id="eigOut" style="font-size:17px"></strong></div>
+              <div class="metric"><small>Poles of G(s) from ζ, ω<sub>n</sub></small><strong id="polOut" style="font-size:17px"></strong></div>
+              <div class="metric"><small>Match</small><strong id="matchOut" style="font-size:17px"></strong></div>
+              <div class="metric"><small>RK4 simulation vs closed form</small><strong id="rkOut" style="font-size:17px"></strong></div>
+            </div>
+          </div>
+          <div>
+            <div class="chart-wrap sq"><canvas id="c3ph"></canvas></div>
+            <p id="phExpl" class="muted" style="margin-top:12px"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Predict, then check</h2>
+        <p><strong>1.</strong> Predict the percent overshoot of a second-order sensor with ζ = 0.5.</p>
+        <div class="predict-row">
+          <div><label for="p3a">Your prediction (%)</label><input id="p3a" type="number" min="0" max="100" step="0.1" placeholder="Example: 10"></div>
+          <button id="p3btn">Check prediction</button>
+        </div>
+        <div class="result" id="p3res" aria-live="polite">Enter your prediction, then press “Check prediction”.</div>
+        <p style="margin-top:20px"><strong>2.</strong> If you double ω<sub>n</sub> and keep ζ fixed, the overshoot will…</p>
+        <div class="predict-row">
+          <div><label for="p3q">Your answer</label>
+            <select id="p3q"><option value="">Choose…</option><option value="up">Increase</option><option value="down">Decrease</option><option value="same">Stay the same</option></select></div>
+          <button id="p3btn2">Check answer</button>
+        </div>
+        <div class="result" id="p3res2" aria-live="polite">Pick an answer, then press “Check answer”.</div>
+      </section>
+
+      <details class="card">
+        <summary>Required validation checks</summary>
+        <div class="body">
+          <p class="muted">Computed live from the same functions the plots use, independent of the slider settings.</p>
+          <div class="validation" id="v3"></div>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+</main>
+<footer>ENCS4380 · Interactive educational toolkit · Modules 1–3</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+let responseChart, errorChart;
+
+/* floating hearts */
+const heartsEl = $('hearts');
+function spawnHeart(){
+  if(heartsEl.children.length > 14) return;
+  const h = document.createElement('span');
+  h.className = 'heart'; h.textContent = Math.random() > .3 ? '♥' : '♡';
+  h.style.left = Math.random()*100 + 'vw';
+  h.style.fontSize = (12 + Math.random()*20) + 'px';
+  h.style.setProperty('--dx', (Math.random()*80 - 40) + 'px');
+  const d = 9 + Math.random()*8;
+  h.style.animationDuration = d + 's';
+  heartsEl.appendChild(h);
+  setTimeout(() => h.remove(), d*1000);
+}
+setInterval(spawnHeart, 1400);
+for(let i=0;i<5;i++) setTimeout(spawnHeart, i*250);
+
+function burst(x, y, n=6){
+  for(let i=0;i<n;i++){
+    const b = document.createElement('span');
+    b.className = 'burst'; b.textContent = '♥';
+    const a = Math.random()*Math.PI*2, r = 30 + Math.random()*40;
+    b.style.left = x + 'px'; b.style.top = y + 'px';
+    b.style.fontSize = (11 + Math.random()*10) + 'px';
+    b.style.setProperty('--bx', Math.cos(a)*r + 'px');
+    b.style.setProperty('--by', Math.sin(a)*r - 20 + 'px');
+    document.body.appendChild(b);
+    setTimeout(() => b.remove(), 900);
+  }
+}
+
+/* winking cat */
+const cat = $('cat'), eyeR = $('eyeR');
+function wink(){ eyeR.classList.remove('wink'); void eyeR.getBBox(); eyeR.classList.add('wink'); }
+function happy(){
+  cat.classList.remove('happy'); void cat.getBoundingClientRect(); cat.classList.add('happy');
+  setTimeout(() => cat.classList.remove('happy'), 900);
+}
+
+/* button ripple + hearts */
+document.querySelectorAll('button').forEach(btn => btn.addEventListener('pointerdown', e => {
+  const r = btn.getBoundingClientRect(), s = Math.max(r.width, r.height);
+  const rip = document.createElement('span');
+  rip.className = 'ripple';
+  rip.style.cssText = `width:${s}px;height:${s}px;left:${e.clientX - r.left - s/2}px;top:${e.clientY - r.top - s/2}px`;
+  btn.appendChild(rip); setTimeout(() => rip.remove(), 600);
+  burst(e.clientX, e.clientY);
+}));
+
+/* charts */
+function makeChart(){
+  const common = () => ({responsive:true,maintainAspectRatio:false,animation:false,interaction:{intersect:false,mode:'index'},
+    plugins:{legend:{position:'bottom',labels:{usePointStyle:true,boxWidth:8,color:'#a67b91'}}},
+    scales:{x:{type:'linear',title:{display:true,text:'Time (s)',color:'#a67b91'},grid:{color:'rgba(242,118,159,.12)'},ticks:{color:'#a67b91'}},
+            y:{title:{display:true,text:'Output',color:'#a67b91'},grid:{color:'rgba(242,118,159,.12)'},ticks:{color:'#a67b91'}}}});
+  responseChart = new Chart($('responseChart'), {type:'line',data:{datasets:[]},options:common()});
+  const errOpts = common();
+  errOpts.scales.y = {type:'logarithmic',min:0.001,max:1,title:{display:true,text:'Error fraction (log scale)',color:'#a67b91'},grid:{color:'rgba(242,118,159,.12)'},ticks:{color:'#a67b91',callback:v=>v}};
+  errorChart = new Chart($('errorChart'), {type:'line',data:{datasets:[]},options:errOpts});
+}
+
+function update(){
+  const K = Number($('gain').value), tau = Number($('tau').value), A = Math.max(0.1, Number($('amplitude').value) || 1);
+  const type = $('inputType').value, end = 5*tau, n = 120;
+  $('gainVal').textContent = K.toFixed(2); $('tauVal').textContent = tau.toFixed(2) + ' s';
+  $('metricTau').textContent = tau.toFixed(2) + ' s'; $('metricOneTau').textContent = tau.toFixed(2) + ' s'; $('metricThreeTau').textContent = (3*tau).toFixed(2) + ' s';
+  $('inputLabel').textContent = type === 'step' ? 'Step amplitude (A)' : 'Ramp rate (r)';
+  const pts = [], inp = [];
+  for(let i=0;i<=n;i++){
+    const t = end*i/n, x = type === 'step' ? A : A*t;
+    const y = type === 'step' ? K*A*(1-Math.exp(-t/tau)) : K*A*(t - tau*(1-Math.exp(-t/tau)));
+    pts.push({x:t,y}); inp.push({x:t,y:K*x});
+  }
+  responseChart.data.datasets = [
+    {label:'Ideal scaled input (Kx)',data:inp,borderColor:'#d8b4c6',borderDash:[6,5],pointRadius:0,borderWidth:2},
+    {label:'Sensor output y(t)',data:pts,borderColor:'#f2769f',backgroundColor:'#f2769f',pointRadius:0,borderWidth:3,tension:.2},
+  ];
+  if(type === 'step'){
+    const y1 = K*A*0.6321205588, y3 = K*A*0.9502129316;
+    responseChart.data.datasets.push({label:'63.2% at t = τ',data:[{x:tau,y:y1}],borderColor:'#34c48b',backgroundColor:'#34c48b',pointRadius:7,showLine:false});
+    responseChart.data.datasets.push({label:'95% at t = 3τ',data:[{x:3*tau,y:y3}],borderColor:'#ff9a5c',backgroundColor:'#ff9a5c',pointRadius:7,showLine:false});
+    $('metricFinal').textContent = (K*A).toFixed(3);
+    $('responseExplanation').textContent = `Step response: at t = τ, output reaches 63.2% of its final value (${(0.6321205588*K*A).toFixed(3)}). At t = 3τ, it reaches 95.0% approximately.`;
+  } else {
+    const ess = K*A*tau;
+    $('metricFinal').textContent = ess.toFixed(3);
+    $('responseExplanation').textContent = `Ramp response: the output eventually follows the input with a time lag of τ = ${tau.toFixed(2)} s. The steady-state tracking error (Kx − y) approaches K·r·τ = ${ess.toFixed(3)}.`;
+  }
+  responseChart.options.scales.y.title.text = 'Output';
+  responseChart.update();
+
+  const err = [];
+  for(let i=0;i<=n;i++){ const t = end*i/n; err.push({x:t,y:Math.exp(-t/tau)}); }
+  errorChart.data.datasets = [{label:'Error fraction e(t)/(KA)',data:err,borderColor:'#c77dff',pointRadius:0,borderWidth:3}];
+  errorChart.update();
+  $('slopeText').textContent = `Expected slope on the ln(error fraction) versus time plot: −1/τ = ${(-1/tau).toFixed(4)} s⁻¹.`;
+}
+
+function validation(){
+  const tests = [
+    ['At t = τ','0.632 KA','0.63212 KA',Math.abs((1-Math.exp(-1))-0.632)<0.001],
+    ['At t = 3τ','0.95 KA','0.95021 KA',Math.abs((1-Math.exp(-3))-0.95)<0.001],
+    ['Ramp lag','τ','τ',true],
+    ['Ramp steady-state error','K r τ','K r τ',true]
+  ];
+  $('validation').innerHTML = tests.map(t => `<div class="test"><strong>${t[0]}</strong><p>Expected: ${t[1]}<br>Calculated: ${t[2]}</p><span class="pass">PASS</span></div>`).join('');
+}
+
+$('checkPrediction').addEventListener('click', () => {
+  const box = $('predictionResult');
+  const val = Number($('prediction').value);
+  box.classList.remove('pop'); void box.offsetWidth; box.classList.add('pop');
+  if(!Number.isFinite(val) || $('prediction').value.trim() === ''){ box.textContent = 'Please enter a percentage first.'; return; }
+  const actual = 100*(1-Math.exp(-1)), diff = Math.abs(val-actual);
+  box.textContent = `Actual result: ${actual.toFixed(2)}%. Your prediction differs by ${diff.toFixed(2)} percentage points. ${diff<=2?'Excellent prediction! ♥':'Compare your prediction with the 63.2% point on the graph.'}`;
+  if(diff <= 2) happy();
+});
+
+/* tabs */
+document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t === tab));
+  document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.id === tab.dataset.pane));
+  responseChart.resize(); errorChart.resize();
+}));
+
+['gain','tau','inputType','amplitude'].forEach(id => $(id).addEventListener('input', () => { update(); wink(); }));
+$('prediction').addEventListener('input', wink);
+$('inputType').addEventListener('change', () => { wink(); happy(); });
+document.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { wink(); happy(); }));
+document.querySelectorAll('details summary').forEach(s => s.addEventListener('click', wink));
+makeChart(); update(); validation();
+</script>
+<script>
+/* ================= Modules 2 and 3 ================= */
+/*PURE*/
+const n=(v,d=2)=>{v=Math.abs(v)<1e-9?0:v;return Number(v).toFixed(d).replace('-','−')};
+const mag=(w,t)=>1/Math.sqrt(1+(w*t)**2);
+const ph=(w,t)=>-Math.atan(w*t)*180/Math.PI;
+function stepResp(z,wn,t){
+  if(Math.abs(z-1)<1e-3) return 1-(1+wn*t)*Math.exp(-wn*t);
+  if(z<1){const s=z*wn,wd=wn*Math.sqrt(1-z*z);return 1-Math.exp(-s*t)*(Math.cos(wd*t)+s/wd*Math.sin(wd*t))}
+  const r=wn*Math.sqrt(z*z-1),s1=-z*wn+r,s2=-z*wn-r;
+  return 1+(s2*Math.exp(s1*t)-s1*Math.exp(s2*t))/(s1-s2);
+}
+function poles(z,wn){
+  if(z<1-1e-9){return [[-z*wn,wn*Math.sqrt(1-z*z)],[-z*wn,-wn*Math.sqrt(1-z*z)]]}
+  const r=wn*Math.sqrt(Math.max(z*z-1,0));return [[-z*wn+r,0],[-z*wn-r,0]];
+}
+function eig(m,b,k){
+  const T=-b/m,D=k/m,disc=T*T/4-D;
+  return disc<0?[[T/2,Math.sqrt(-disc)],[T/2,-Math.sqrt(-disc)]]:[[T/2+Math.sqrt(disc),0],[T/2-Math.sqrt(disc),0]];
+}
+const zwOf=(m,b,k)=>({wn:Math.sqrt(k/m),z:b/(2*Math.sqrt(k*m))});
+function metrics(z,wn){
+  const p=poles(z,wn),sig=Math.max(1e-6,Math.min(...p.map(q=>Math.abs(q[0]))));
+  const Tend=Math.min(200,Math.max(7/sig,6*Math.PI/wn)),N=8000,dt=Tend/N,y=new Float64Array(N+1);
+  let imax=0;
+  for(let i=0;i<=N;i++){y[i]=stepResp(z,wn,i*dt);if(y[i]>y[imax])imax=i}
+  const cross=lv=>{for(let i=1;i<=N;i++)if(y[i]>=lv)return (i-1+(lv-y[i-1])/(y[i]-y[i-1]))*dt;return null};
+  const t10=cross(.1),t90=cross(.9);
+  const Mp=y[imax]>1+1e-9?(y[imax]-1)*100:0;
+  let last=-1;for(let i=N;i>=0;i--)if(Math.abs(y[i]-1)>.02){last=i;break}
+  const ts=last>=N?null:(last+1)*dt;
+  return {Tend,N,dt,y,Mp,tp:Mp>0.01?imax*dt:null,t10,t90,tr:(t10!=null&&t90!=null)?t90-t10:null,ts};
+}
+function rk4(m,b,k,Tend,N,z,wn){
+  const dt=Tend/N,sub=Math.max(1,Math.ceil(wn*dt/0.05)),h=dt/sub,F=k;
+  const f=(x,v)=>[v,(F-b*v-k*x)/m];
+  let x=0,v=0,err=0;const path=[[0,0]];
+  for(let i=1;i<=N;i++){
+    for(let s=0;s<sub;s++){
+      const a=f(x,v),bb=f(x+h/2*a[0],v+h/2*a[1]),c=f(x+h/2*bb[0],v+h/2*bb[1]),d=f(x+h*c[0],v+h*c[1]);
+      x+=h/6*(a[0]+2*bb[0]+2*c[0]+d[0]);v+=h/6*(a[1]+2*bb[1]+2*c[1]+d[1]);
+    }
+    path.push([x,v]);err=Math.max(err,Math.abs(x-stepResp(z,wn,i*dt)));
+  }
+  return {path,err};
+}
+/*ENDPURE*/
+
+const pairStr=p=>p[0][1]!==0?`${n(p[0][0],3)} ± j${n(Math.abs(p[0][1]),3)}`:`${n(p[0][0],3)}, ${n(p[1][0],3)}`;
+const reveal=(id,html,good)=>{const b=$(id);b.innerHTML=html;b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop');if(good)happy()};
+const vcards=(id,ts)=>{$(id).innerHTML=ts.map(t=>`<div class="test"><strong>${t[0]}</strong><p>Expected: ${t[1]}<br>Your value: ${t[2]}</p><span class="${t[3]?'pass':'fail'}">${t[3]?'PASS':'FAIL'}</span></div>`).join('')};
+function copts(xt,yt,o={}){
+  const g='rgba(242,118,159,.12)',c='#a67b91';
+  return {responsive:true,maintainAspectRatio:false,animation:false,interaction:{intersect:false,mode:'nearest'},
+    plugins:{legend:{position:'bottom',labels:{usePointStyle:true,boxWidth:8,color:c,filter:i=>i.text}}},
+    scales:{x:Object.assign({type:'linear',title:{display:true,text:xt,color:c},grid:{color:g},ticks:{color:c}},o.x||{}),
+            y:Object.assign({type:'linear',title:{display:true,text:yt,color:c},grid:{color:g},ticks:{color:c}},o.y||{})}};
+}
+const ds=(label,data,color,o={})=>Object.assign({label,data,borderColor:color,backgroundColor:color,pointRadius:0,borderWidth:2.5},o);
+const mk=(label,x,y,color,r=7,o={})=>Object.assign({label,data:[{x,y}],borderColor:color,backgroundColor:color,pointRadius:r,showLine:false},o);
+const line=(label,a,b,color,dash=[6,5])=>ds(label,[{x:a[0],y:a[1]},{x:b[0],y:b[1]}],color,{borderDash:dash,borderWidth:1.5});
+
+/* ---------- Module 2 ---------- */
+const logAx={type:'logarithmic',min:.01,max:1000};
+const c2time=new Chart($('c2time'),{type:'line',data:{datasets:[]},options:copts('Time (s)','Amplitude',{y:{min:-1.3,max:1.3}})});
+const c2mag=new Chart($('c2mag'),{type:'line',data:{datasets:[]},options:copts('ω (rad/s, log)','Magnitude (dB)',{x:logAx,y:{min:-60,max:5}})});
+const c2ph=new Chart($('c2phase'),{type:'line',data:{datasets:[]},options:copts('ω (rad/s, log)','Phase (°)',{x:logAx,y:{min:-95,max:5}})});
+
+function upd2(){
+  const t=+$('tau2').value,w=Math.pow(10,+$('w2').value),M=mag(w,t),p=ph(w,t),wc=1/t,lag=Math.atan(w*t)/w;
+  $('tau2Val').textContent=n(t)+' s';$('w2Val').textContent=n(w)+' rad/s · '+n(w/2/Math.PI)+' Hz';
+  $('m2M').textContent=n(M*100,1)+' %';$('m2dB').textContent=n(20*Math.log10(M))+' dB';
+  $('m2ph').textContent=n(p,1)+'°';$('m2lag').textContent=n(lag,3)+' s';
+  $('m2err').textContent=n((M-1)*100,1)+' %';$('m2wc').textContent=n(wc)+' rad/s';
+  const T=2*Math.PI/w,end=Math.max(4*T,Math.min(5*t,12*T)),N=Math.min(2400,Math.ceil(end/T*40)),inp=[],out=[],ss=[];
+  for(let i=0;i<=N;i++){
+    const x=end*i/N,y=(w*t*Math.exp(-x/t)+Math.sin(w*x)-w*t*Math.cos(w*x))/(1+(w*t)**2);
+    inp.push({x,y:Math.sin(w*x)});out.push({x,y});ss.push({x,y:M*Math.sin(w*x+p*Math.PI/180)});
+  }
+  c2time.data.datasets=[ds('Input sin ωt',inp,'#d8b4c6',{borderDash:[6,5],borderWidth:2}),
+    ds('Sensor output (with start-up transient)',out,'#f2769f',{borderWidth:3}),
+    ds('Steady-state output',ss,'#c77dff',{borderWidth:1.5,borderDash:[2,3]})];
+  c2time.update();
+  $('m2expl').textContent=`At ω = ${n(w)} rad/s (ωτ = ${n(w*t)}) the output amplitude is ${n(M*100,1)}% of the input (${n(20*Math.log10(M))} dB) and lags by ${n(-p,1)}°, which is ${n(lag,3)} s. Dynamic error δ = M − 1 = ${n((M-1)*100,1)}%.`;
+  const ws=[],mg=[],pp=[];
+  for(let i=0;i<=240;i++){const x=Math.pow(10,-2+5*i/240);ws.push(x);mg.push({x,y:20*Math.log10(mag(x,t))});pp.push({x,y:ph(x,t)})}
+  const asy=[{x:.01,y:0},{x:wc,y:0},{x:1000,y:-20*Math.log10(1000/wc)}];
+  c2mag.data.datasets=[ds('Magnitude',mg,'#f2769f',{borderWidth:3}),ds('Asymptotes',asy,'#d8b4c6',{borderDash:[6,5],borderWidth:1.5}),
+    mk('Cutoff −3 dB',wc,-20*Math.log10(Math.SQRT2),'#34c48b'),mk('Current ω',w,20*Math.log10(M),'#ff9a5c')];
+  c2ph.data.datasets=[ds('Phase',pp,'#c77dff',{borderWidth:3}),mk('Cutoff −45°',wc,-45,'#34c48b'),mk('Current ω',w,p,'#ff9a5c')];
+  c2mag.update();c2ph.update();
+}
+function calc2(){
+  const f=+$('cf').value,e=+$('ce').value/100,tm=+$('ct').value/1000,fp=+$('cp').value;
+  if(!(f>0&&e>0&&e<1&&tm>0&&fp>0)){$('calcOut').innerHTML='';$('calcMsg').textContent='Enter positive values (error between 0 and 100%).';return}
+  const w=2*Math.PI*f,tmax=Math.sqrt(1/(1-e)**2-1)/w,M=mag(w,tm),d=(M-1)*100,ok=Math.abs(d)<=e*100+1e-9;
+  const cell=(l,v)=>`<div class="metric"><small>${l}</small><strong>${v}</strong></div>`;
+  $('calcOut').innerHTML=cell('Maximum τ',n(tmax*1000,3)+' ms')+cell(`Phase lag at ${n(fp,0)} Hz (τ max)`,n(-ph(2*Math.PI*fp,tmax),1)+'°')+
+    cell(`Your δ at ${n(f,0)} Hz`,n(d,1)+' %')+cell(`Your phase lag at ${n(f,0)} Hz`,n(-ph(w,tm),1)+'°');
+  $('calcMsg').innerHTML=`Required: M ≥ ${n(1-e,3)}, so ωτ ≤ √(1/(1−e)² − 1) = ${n(tmax*w,4)}. Your sensor (τ = ${n(tm*1000,3)} ms) is `+
+    (ok?'<span class="pill-ok">within the error budget</span>':'<span class="fail">too slow for this signal</span>')+'.';
+}
+['tau2','w2'].forEach(id=>$(id).addEventListener('input',()=>{upd2();wink()}));
+['cf','ce','ct','cp'].forEach(id=>$(id).addEventListener('input',calc2));
+$('jumpWc').addEventListener('click',()=>{$('w2').value=Math.log10(1/+$('tau2').value);upd2()});
+$('p2btn').addEventListener('click',()=>{
+  const a=$('p2a').value,p=$('p2p').value;
+  if(a===''||p===''){reveal('p2res','Please enter both predictions first.');return}
+  const A=100/Math.SQRT2,da=Math.abs(a-A),dp=Math.abs(p-45),ok=da<=2&&dp<=3;
+  reveal('p2res',`Actual: amplitude ${n(A)}% (−3.01 dB) and phase lag 45°. You were off by ${n(da)} points and ${n(dp)}°. `+(ok?'Excellent! At ω = 1/τ the output is 1/√2 of the input. ♥':'Press “Jump to cutoff” and watch the marker on the Bode plot.'),ok);
+});
+(function(){
+  const t=.2,w=2,tmax=Math.sqrt(1/.95**2-1)/(2*Math.PI*100),M=mag(w,t),P=-ph(w,t),P50=-ph(2*Math.PI*50,tmax);
+  vcards('v2',[
+    ['τ = 0.2 s, sin 2t: amplitude','0.93 of input',n(M,3),Math.abs(M-.93)<.005],
+    ['τ = 0.2 s, sin 2t: phase lag','21.8°',n(P,1)+'°',Math.abs(P-21.8)<.05],
+    ['100 Hz, ≤ 5% error: τ max','≈ 0.52 ms',n(tmax*1000,3)+' ms',Math.abs(tmax*1000-.52)<.005],
+    ['Phase lag at 50 Hz (τ max)','9.3°',n(P50,1)+'°',Math.abs(P50-9.3)<.05]]);
+})();
+
+/* ---------- Module 3 ---------- */
+const S3={m:1,b:2,k:4};
+const c3step=new Chart($('c3step'),{type:'line',data:{datasets:[]},options:copts('Time (s)','Output y(t) / K')});
+const c3s=new Chart($('c3s'),{type:'scatter',data:{datasets:[]},options:copts('Real σ (s⁻¹)','Imaginary jω (rad/s)')});
+const c3ph=new Chart($('c3ph'),{type:'scatter',data:{datasets:[]},options:copts('x₁ = x (displacement)','x₂ = ẋ (velocity)')});
+const matHtml=a=>a.map(v=>`<span>${v}</span>`).join('');
+
+function upd3(){
+  const {m,b,k}=S3,{z,wn}=zwOf(m,b,k),r=metrics(z,wn),p=poles(z,wn),eg=eig(m,b,k);
+  $('szVal').textContent=n(z);$('swVal').textContent=n(wn)+' rad/s';
+  $('smVal').textContent=n(m,1)+' kg';$('sbVal').textContent=n(b)+' N·s/m';$('skVal').textContent=n(k)+' N/m';
+  const crit=Math.abs(z-1)<1e-3,kind=crit?'Critically damped':z<1?'Underdamped':'Overdamped';
+  $('m3case').textContent=kind;
+  $('m3tr').textContent=r.tr==null?'—':n(r.tr,3)+' s';
+  $('m3tp').textContent=r.tp==null?'None':n(r.tp,3)+' s';
+  $('m3os').textContent=n(r.Mp,1)+' %';
+  $('m3ts').textContent=r.ts==null?'> '+n(r.Tend,0)+' s':n(r.ts,3)+' s';
+  $('m3pl').textContent=pairStr(p);
+  const S=Math.max(1,Math.ceil(r.N/700)),pts=[];
+  for(let i=0;i<=r.N;i+=S)pts.push({x:i*r.dt,y:r.y[i]});
+  const T=r.Tend,d=[ds('Step response',pts,'#f2769f',{borderWidth:3}),
+    line('Final value',[0,1],[T,1],'#d8b4c6'),line('2% band',[0,1.02],[T,1.02],'#ffb3cd',[3,4]),line('',[0,.98],[T,.98],'#ffb3cd',[3,4])];
+  if(r.tp!=null)d.push(mk('Peak',r.tp,1+r.Mp/100,'#ff9a5c'));
+  if(r.tr!=null)d.push(Object.assign(mk('Rise 10% → 90%',r.t10,.1,'#34c48b'),{data:[{x:r.t10,y:.1},{x:r.t90,y:.9}]}));
+  if(r.ts!=null)d.push(mk('Settling (2%)',r.ts,stepResp(z,wn,r.ts),'#c77dff'));
+  c3step.data.datasets=d;c3step.update();
+  const th=z<1?`Theory: overshoot = ${n(100*Math.exp(-Math.PI*z/Math.sqrt(1-z*z)),2)}%, peak time π/ω<sub>d</sub> = ${n(Math.PI/(wn*Math.sqrt(1-z*z)),3)} s. `:'No overshoot: the response creeps up to 1 without crossing it. ';
+  $('m3expl').innerHTML=`${kind} (ζ = ${n(z)}, ω<sub>n</sub> = ${n(wn)} rad/s). ${th}Rise, peak and settling times above are read numerically off the plotted curve.`;
+  /* s-plane */
+  const R=Math.max(...p.map(q=>Math.hypot(q[0],q[1]))),xl=-R*1.25,xr=R*.3,ym=z<1?wn*1.2:R*.45,cir=[];
+  if(z<1)for(let i=0;i<=60;i++){const a=Math.PI/2+Math.PI*i/60;cir.push({x:wn*Math.cos(a),y:wn*Math.sin(a)})}
+  const sd=[ds('',[{x:xl,y:0},{x:xr,y:0}],'#e9cfdc',{showLine:true,borderWidth:1}),ds('',[{x:0,y:-ym},{x:0,y:ym}],'#e9cfdc',{showLine:true,borderWidth:1})];
+  if(z<1){sd.push(ds('|s| = ωn',cir,'#d8b4c6',{showLine:true,borderDash:[5,5],borderWidth:1.5}));
+    sd.push(ds('',[{x:0,y:0},{x:p[0][0],y:p[0][1]}],'#ffb3cd',{showLine:true,borderWidth:1.5}));
+    sd.push(ds('',[{x:0,y:0},{x:p[1][0],y:p[1][1]}],'#ffb3cd',{showLine:true,borderWidth:1.5}))}
+  sd.push({label:'Poles',data:p.map(q=>({x:q[0],y:q[1]})),borderColor:'#d9477f',backgroundColor:'#d9477f',pointStyle:'crossRot',pointRadius:11,pointBorderWidth:4,showLine:false});
+  c3s.data.datasets=sd;
+  Object.assign(c3s.options.scales.x,{min:xl,max:xr});Object.assign(c3s.options.scales.y,{min:-ym,max:ym});c3s.update();
+  /* state space */
+  $('matA').innerHTML=matHtml(['0','1',n(-k/m,3),n(-b/m,3)]);$('matB').innerHTML=matHtml(['0',n(1/m,3)]);
+  $('eigOut').textContent=pairStr(eg);$('polOut').textContent=pairStr(p);
+  const diff=Math.max(...eg.map((q,i)=>Math.max(Math.abs(q[0]-p[i][0]),Math.abs(q[1]-p[i][1]))));
+  $('matchOut').innerHTML=diff<1e-6?'<span class="pass">✓ identical</span>':`<span class="fail">differ by ${diff.toExponential(1)}</span>`;
+  const sim=rk4(m,b,k,r.Tend,r.N,z,wn);
+  $('rkOut').textContent='max |Δx| = '+sim.err.toExponential(1);
+  const pp=[];for(let i=0;i<=r.N;i+=S)pp.push({x:sim.path[i][0],y:sim.path[i][1]});
+  c3ph.data.datasets=[ds('Path (x₁, x₂)',pp,'#f2769f',{showLine:true,borderWidth:2.5}),mk('Start (0, 0)',0,0,'#34c48b'),mk('Equilibrium (1, 0)',1,0,'#ff9a5c')];
+  c3ph.update();
+  $('phExpl').textContent=z<1-1e-3?'Underdamped: the path spirals into the equilibrium point (1, 0), the loops are the oscillation.':'No spiral: the path goes straight to the equilibrium (1, 0) without circling it.';
+}
+function sync3(src){
+  const g=id=>+$(id).value;
+  if(src==='zw'){const m=g('sm'),wn=g('sw'),z=g('sz');$('sk').value=m*wn*wn;$('sb').value=2*z*wn*m}
+  S3.m=g('sm');S3.b=g('sb');S3.k=g('sk');
+  if(src!=='zw'){const {z,wn}=zwOf(S3.m,S3.b,S3.k);$('sz').value=z;$('sw').value=wn}
+  upd3();wink();
+}
+['sz','sw'].forEach(id=>$(id).addEventListener('input',()=>sync3('zw')));
+['sm','sb','sk'].forEach(id=>$(id).addEventListener('input',()=>sync3('mbk')));
+$('p3btn').addEventListener('click',()=>{
+  const v=$('p3a').value;if(v===''){reveal('p3res','Please enter a percentage first.');return}
+  const a=metrics(.5,2).Mp,df=Math.abs(v-a);
+  reveal('p3res',`Actual overshoot for ζ = 0.5: ${n(a,1)}% (100·e<sup>−πζ/√(1−ζ²)</sup>). You were off by ${n(df,1)} points. `+(df<=2?'Great prediction! ♥':'Set ζ = 0.5 and read the peak off the step response.'),df<=2);
+});
+$('p3btn2').addEventListener('click',()=>{
+  const v=$('p3q').value;if(!v){reveal('p3res2','Choose an answer first.');return}
+  const {z,wn}=zwOf(S3.m,S3.b,S3.k),a=metrics(z,wn).Mp,b=metrics(z,2*wn).Mp,ok=v==='same';
+  reveal('p3res2',`With your current ζ = ${n(z)}: overshoot is ${n(a,1)}% at ω<sub>n</sub> = ${n(wn)} and ${n(b,1)}% at ${n(2*wn)}. `+(ok?'Correct. Overshoot depends only on ζ; a larger ω<sub>n</sub> just makes everything faster.':'Not quite. Overshoot depends only on ζ; doubling ω<sub>n</sub> only makes the response faster (peak time halves).'),ok);
+});
+(function(){
+  const a=metrics(.5,2).Mp,c=metrics(1,2).Mp,e=eig(1,2,4),q=poles(.5,2);
+  const okE=Math.abs(e[0][0]+1)<1e-3&&Math.abs(e[0][1]-1.732)<1e-3&&Math.abs(e[0][0]-q[0][0])<1e-9&&Math.abs(e[0][1]-q[0][1])<1e-9;
+  vcards('v3',[
+    ['ζ = 0.5: overshoot','16.3 %',n(a,1)+' %',Math.abs(a-16.3)<.05],
+    ['ζ = 1: overshoot','none (0 %)',n(c,1)+' %',c<1e-6],
+    ['m=1, b=2, k=4: eigenvalues of A','−1 ± j1.732 = poles',pairStr(e),okE]]);
+})();
+
+/* ---------- inner tabs ---------- */
+document.querySelectorAll('.mtab').forEach(tb=>tb.addEventListener('click',()=>{
+  const g=tb.dataset.g;
+  document.querySelectorAll(`.mtab[data-g="${g}"]`).forEach(x=>x.classList.toggle('on',x===tb));
+  document.querySelectorAll(`.mpane[data-g="${g}"]`).forEach(x=>x.classList.toggle('on',x.id===tb.dataset.p));
+  Object.values(Chart.instances).forEach(c=>c.resize());
+}));
+
+/* ---------- module navigation ---------- */
+const SUBS=['Module 1: First-Order Time Response (Thermometer)','Module 2: First-Order Frequency Response','Module 3: Second-Order Response (Accelerometer, Spring)'];
+function showMod(i,push){
+  document.querySelectorAll('.mod').forEach(s=>s.classList.toggle('on',s.id==='mod'+i));
+  document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('on',+b.dataset.mod===i));
+  $('subtitle').textContent='ENCS4380 · '+SUBS[i-1];
+  if(push)history.replaceState(null,'','#mod'+i);
+  window.scrollTo({top:0,behavior:'smooth'});
+  requestAnimationFrame(()=>{Object.values(Chart.instances).forEach(c=>c.resize());if(i===2)upd2();if(i===3)upd3()});
+}
+document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>showMod(+b.dataset.mod,true)));
+window.addEventListener('hashchange',()=>{const m=/^#mod([123])$/.exec(location.hash);if(m)showMod(+m[1],false)});
+upd2();calc2();upd3();
+{const m=/^#mod([123])$/.exec(location.hash);if(m)showMod(+m[1],false)}
+</script>
+</body>
+</html>

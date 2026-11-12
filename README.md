@@ -147,7 +147,17 @@ The team reviewed the generated suggestions, evaluated the mathematical models, 
 
 ## Screenshots
 
-Screenshots of all four modules can be added to the repository to demonstrate the final interface and main features.
+### Module 1 – First-Order Time Response
+![Module 1](screenshots/module1.png)
+
+### Module 2 – Frequency Response
+![Module 2](screenshots/module2.png)
+
+### Module 3 – Second-Order Systems
+![Module 3](screenshots/module3.png)
+
+### Module 4 – Guess the Sensor
+![Module 4](screenshots/module4.png)
 
 ## Final Release
 

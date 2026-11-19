@@ -3,166 +3,89 @@
 **Course:** ENCS4380 – Interfacing Techniques  
 **University:** Birzeit University  
 **Instructor:** Dr. Wasel Ghanem  
-**Project Status:** Final Version – Modules 1–4
+**Homework 2 status:** Checkpoint – P1 and P2
 
-## Live Website
+## Live website
 
-**[Launch the Interactive Toolkit](https://deyaliqassem.github.io/encs4380-dynamics-21-1/)**
+https://deyaliqassem.github.io/encs4380-dynamics-21-1/
 
-## Project Overview
+## Project overview
 
-The Dynamic Characteristics Interactive Toolkit is a web-based educational application designed to demonstrate the dynamic behavior of measurement systems and sensors.
+This client-side educational toolkit demonstrates the dynamic behavior of measurement systems and sensors through mathematical models, interactive controls, numerical simulations, plots, prediction activities, and validation checks.
 
-The toolkit provides mathematical models, interactive controls, real-time graphical visualizations, prediction activities, and numerical validation checks to help students understand first-order and second-order dynamic systems.
+Homework 2 extends the original four-module toolkit with a **Control** section containing P1 and P2. Modules 1–4 are retained.
 
-The final application integrates four interactive modules into a single website.
+## Existing modules (Homework 1)
 
-## Team Members and Module Responsibilities
+1. **First-Order Time Response** – adjustable gain and time constant, step/ramp inputs, response plots, response markers, error visualization, prediction, and validation.
+2. **Frequency Response** – sinusoidal response, amplitude ratio, phase lag, Bode plots, cutoff frequency, prediction, and validation.
+3. **Second-Order Systems** – damping ratio, natural frequency, step response, poles, state-space model, and RK4 simulation.
+4. **Guess the Sensor** – randomized sensor scenarios, noisy measurements, parameter estimates, hints, and scoring.
 
-| Team Member | Primary Module Responsibility |
+## Homework 2 checkpoint modules
+
+### P1 – PID Playground
+
+- Select a first-order or second-order plant.
+- Adjust plant parameters, setpoint, and PID gains `Kp`, `Ki`, and `Kd`.
+- Adjust the actuator/control-signal limit.
+- View the closed-loop output and control signal.
+- View rise time, overshoot, settling time, and steady-state error.
+- Use the closed-loop PID block diagram and Predict, then check activity.
+- Review the assignment validation cases, including P-only time constant and steady-state error, and the PI parameter check.
+
+### P2 – Slow Sensor in the Loop
+
+- Adjust the sensor time constant and plant time constant.
+- Adjust PID gains and control-signal limit.
+- Compare true plant output with the sensor's measured output.
+- View the control signal, true-output overshoot, final error, and sensor lag.
+- Use the Predict, then check activity to reason about increasing sensor lag.
+
+## Team and responsibilities
+
+The Homework 1 module owners remain documented in the original project report:
+
+| Team member | Homework 1 responsibility |
 |---|---|
 | Deyali Qassem | Module 1 – First-Order Time Response |
 | Malak Odeh | Module 2 – Frequency Response |
 | Rahaf Barakat | Module 3 – Second-Order Systems |
 | Noor Shawamreh | Module 4 – Guess the Sensor |
 
-### Team Collaboration
+**Homework 2 P1 owner:** Add the assigned team member's name.  
+**Homework 2 P2 owner:** Add the assigned team member's name.
 
-The project was developed collaboratively by all four team members.
+Create one GitHub Issue for P1 and one for P2, assign each issue to its module owner, and update the names above before submitting.
 
-Each member had primary responsibility for coordinating and reviewing an assigned module. The team collaborated on implementation, interface improvements, debugging, mathematical verification, integration, and testing.
+## Technologies
 
-Module ownership represents responsibility and coordination rather than exclusive individual development.
+- HTML5, CSS3, JavaScript
+- Chart.js 4.4.1 (loaded from jsDelivr)
+- Git, GitHub, GitHub Pages
 
-## Project Modules
+The application runs in the browser and does not require a server. An internet connection is required to load Chart.js from the CDN.
 
-### Module 1 – First-Order Time Response
+## Local testing
 
-**Primary Owner:** Deyali Qassem
-
-This module demonstrates the time-domain response of a first-order measurement system.
-
-**Features:**
-- Adjustable sensor gain (K) and time constant (τ).
-- Step and ramp input selection.
-- Interactive input and output response plots.
-- Response markers at 63.2% and approximately 95%.
-- Ramp lag and steady-state error calculations.
-- Logarithmic error-fraction visualization.
-- Predict-then-check activity.
-- Numerical validation checks.
-
-### Module 2 – Frequency Response
-
-**Primary Owner:** Malak Odeh
-
-This module explores how a first-order sensor responds to sinusoidal inputs at different frequencies.
-
-**Features:**
-- Adjustable time constant and input frequency.
-- Interactive input and output sine-wave plots.
-- Amplitude ratio and phase lag calculations.
-- Bode magnitude and phase plots.
-- Cutoff-frequency visualization.
-- Dynamic-error calculator.
-- Predict-then-check activity.
-- Numerical validation checks.
-
-### Module 3 – Second-Order Systems
-
-**Primary Owner:** Rahaf Barakat
-
-This module demonstrates second-order dynamic behavior using a mass-spring-damper model.
-
-**Features:**
-- Adjustable damping ratio and natural frequency.
-- Interactive mass, damping, and stiffness parameters.
-- Step-response visualization.
-- Pole locations in the complex s-plane.
-- Rise time, peak time, overshoot, and settling time.
-- State-space representation.
-- Eigenvalue and transfer-function pole comparison.
-- Numerical simulation using the fourth-order Runge–Kutta (RK4) method.
-- Predict-then-check activities and validation checks.
-
-### Module 4 – Guess the Sensor
-
-**Primary Owner:** Noor Shawamreh
-
-This module provides an interactive learning activity where users estimate hidden sensor parameters from simulated measurements.
-
-**Features:**
-- Randomly generated mystery sensor scenarios.
-- Noisy sensor measurements.
-- First-order step, first-order sine, and second-order response scenarios.
-- Parameter estimation through interactive input fields.
-- Optional estimation hints.
-- Comparison between true and estimated responses.
-- Relative-error-based scoring.
-- Session score and completed-round tracking.
-
-## Technologies Used
-
-- HTML5
-- CSS3
-- JavaScript
-- Chart.js
-- Git and GitHub
-- GitHub Pages
-
-The application is implemented as a client-side website and uses Chart.js for graphical visualization.
-
-## Mathematical Validation
-
-The toolkit includes numerical checks and interactive demonstrations of important dynamic-system properties.
-
-These include:
-
-- First-order step response at one and three time constants.
-- First-order sinusoidal amplitude attenuation and phase lag.
-- Frequency-response cutoff behavior and dynamic-error limits.
-- Second-order overshoot for underdamped systems.
-- Critical damping with zero overshoot.
-- Agreement between state-space eigenvalues and transfer-function poles.
-
-## Project Structure
-
-- `index.html` – Main application integrating Modules 1–4.
-- `README.md` – Project documentation.
-- `Module_1_First_Order_Time_Response.html` – Preserved Module 1 checkpoint version.
-- Additional HTML file – Earlier integrated checkpoint version containing Modules 1–3.
+1. Download the repository ZIP or clone the repository.
+2. Open `index.html` in a modern browser.
+3. Check Modules 1–4.
+4. Open **Control** in the top navigation.
+5. Open P1 and move each PID slider; confirm the response and control plots redraw.
+6. Open P2 and increase the sensor time constant; compare the true output and measured output.
+7. Test both prediction activities and resize the browser to check the mobile layout.
 
 ## Deployment
 
-The project is hosted through GitHub Pages using the `main` branch.
+The existing project is hosted with GitHub Pages from the `main` branch. Keep the same repository and deployment configuration. Back up the current `index.html` before replacing it with the updated checkpoint file, then commit and push the changes.
 
-**Live URL:**  
-https://deyaliqassem.github.io/encs4380-dynamics-21-1/
+**Live URL:** https://deyaliqassem.github.io/encs4380-dynamics-21-1/
 
-## AI Assistance Disclosure
+## AI assistance disclosure
 
-ChatGPT and Claude were used as supporting tools during development, including assistance with interface design, HTML/CSS styling, JavaScript structure, debugging, and code organization.
+ChatGPT and Claude were used as supporting tools for interface design, HTML/CSS styling, JavaScript structure, debugging, and code organization. Team members must review the code, verify the mathematical models, test the live application, and be able to explain the equations and implementation during the demo.
 
-The team reviewed the generated suggestions, evaluated the mathematical models, and tested the functionality and numerical results of the toolkit.
+## Checkpoint note
 
-## Screenshots
-
-### Module 1 – First-Order Time Response
-![Module 1](screenshots/module1.png)
-
-### Module 2 – Frequency Response
-![Module 2](screenshots/module2.png)
-
-### Module 3 – Second-Order Systems
-![Module 3](screenshots/module3.png)
-
-### Module 4 – Guess the Sensor
-![Module 4](screenshots/module4.png)
-
-## Final Release
-
-The completed project is prepared for release as **v1.0**, including all four integrated modules.
-
-## Conclusion
-
-This project provides an interactive educational environment for exploring sensor dynamics, connecting mathematical equations with graphical simulations, and strengthening understanding through experimentation and prediction activities.
+This package is for the Homework 2 checkpoint (P1 and P2). It is not the final Homework 2 release. The assignment's final release is expected to be tagged `v2.0` after P3, P4, and the remaining requirements are completed.

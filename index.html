@@ -124,6 +124,15 @@ button.ghost{background:var(--chip);color:var(--deep);border:1px solid var(--lin
 /* Module 4 */
 .secondary{background:var(--soft);color:var(--deep);border:1px solid var(--line);box-shadow:none}.result{padding:14px;border:1px solid var(--line);background:var(--chip);border-radius:16px;line-height:1.7;min-height:55px}.hint{color:var(--deep);min-height:24px}.hide{display:none!important}.action-row{display:flex;gap:10px;flex-wrap:wrap}.chart-wrap{height:370px}.note{font-size:13px;color:var(--muted)}.control input[type=number]{margin-top:3px}.score-banner{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}.score-banner .metric strong{font-size:24px}.form-actions{margin:14px 0}.instructions{padding-left:20px;line-height:1.7}.instructions li{margin-bottom:8px}#result p{margin:8px 0}.hint-card{margin-top:12px;padding:12px;background:var(--chip);border-radius:14px;border:1px solid var(--line)}@media(max-width:600px){.action-row button{flex:1}.score-banner{grid-template-columns:1fr 1fr}}
 #mod4 .hint-card{margin-top:12px}#mod4 .layout{align-items:start}
+
+.field{margin:0 0 15px}.field input[type=range]{display:block;margin:8px 0}.field small{display:block;color:var(--deep);font-variant-numeric:tabular-nums}
+#mod5 .chart-wrap,#mod6 .chart-wrap{height:320px}
+@media(max-width:600px){#mod5 .chart-wrap,#mod6 .chart-wrap{height:270px}}
+
+.block-diagram{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:7px;padding:16px;background:var(--chip);border:1px solid var(--line);border-radius:16px;margin-top:14px}
+.bd-node{min-width:88px;text-align:center;padding:10px 9px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:13px;line-height:1.45}
+.bd-node strong{color:var(--deep)}.bd-accent{border:2px solid var(--pink);background:var(--soft)}.bd-arrow{font-weight:800;color:var(--deep);font-size:20px}.bd-feedback{flex-basis:100%;text-align:center;color:var(--muted);font-size:13px;padding-top:6px}
+
 </style>
 </head>
 <body>
@@ -151,6 +160,7 @@ button.ghost{background:var(--chip);color:var(--deep);border:1px solid var(--lin
   <button class="navbtn" data-mod="2">2 · Frequency response</button>
   <button class="navbtn" data-mod="3">3 · Second-order</button>
   <button class="navbtn" data-mod="4">4 · Guess the sensor</button>
+  <button class="navbtn" data-mod="control">Control · Homework 2</button>
 </div></nav>
 
 <main>
@@ -443,6 +453,95 @@ button.ghost{background:var(--chip);color:var(--deep);border:1px solid var(--lin
 <div><section class="card"><h2>Mystery sensor response</h2><p id="scenario" class="muted"></p><div class="chart-wrap"><canvas id="plot" role="img" aria-label="Noisy sensor measurements, then true and guessed response overlays"></canvas></div><p class="muted" style="margin-top:12px">Pink dots: noisy measurements. After reveal, green: true response; purple dashed: your estimate.</p></section><details class="card"><summary>How to estimate the hidden parameters</summary><div class="body"><div class="formula"><strong>First-order step:</strong> K ≈ final height; τ ≈ time at 63.2% of final height.<br><strong>Log method:</strong> ln(error fraction) = −t/τ.<br><strong>First-order sine:</strong> phase lag φ = −atan(ωτ); output amplitude = K/√(1+(ωτ)²).<br><strong>Second-order underdamped:</strong> M<sub>p</sub> = exp(−πζ/√(1−ζ²)); t<sub>p</sub> = π/(ω<sub>n</sub>√(1−ζ²)).</div><p class="muted">The second-order peak formulas apply to underdamped step responses. The stated sine frequency is in rad/s.</p></div></details></div></div>
 
 </section>
+
+<section class="mod" id="modcontrol">
+  <section class="card">
+    <h2>Control · Homework 2</h2>
+    <p class="muted">This section extends the Dynamic Characteristics Toolkit with feedback-control experiments. Choose a module to open its interactive simulation.</p>
+    <div class="grid2">
+      <article class="card" style="margin:0">
+        <h2>P1 · PID Playground</h2>
+        <p>Explore proportional, integral, and derivative control using first- and second-order plant models. Observe the closed-loop response, control signal, and performance metrics.</p>
+        <button type="button" data-open-mod="5">Open PID Playground</button>
+      </article>
+      <article class="card" style="margin:0">
+        <h2>P2 · Slow Sensor in the Loop</h2>
+        <p>Compare the true plant output with the delayed sensor measurement and observe how sensor time constant affects feedback behavior.</p>
+        <button type="button" data-open-mod="6">Open Slow Sensor</button>
+      </article>
+    </div>
+  </section>
+</section>
+
+<section class="mod" id="mod5">
+  <details class="card"><summary>PID model and feedback loop</summary><div class="body">
+    <div class="formula">e(t) = r(t) − y(t)<br>u(t) = Kp e(t) + Ki ∫e(t)dt + Kd de(t)/dt<br>First-order plant: τ dy/dt + y = Ku</div>
+    <p class="muted">The controller compares the setpoint with the measured output, computes a control signal, and applies it to the plant. The actuator command is limited to the selected range.</p>
+    <div class="block-diagram" role="img" aria-label="Closed-loop PID block diagram: setpoint to summing junction, PID controller, actuator, plant, output, and feedback to the summing junction.">
+      <div class="bd-node">Setpoint<br><strong>r(t)</strong></div><div class="bd-arrow">→</div>
+      <div class="bd-node">Error<br><strong>e(t)</strong></div><div class="bd-arrow">→</div>
+      <div class="bd-node bd-accent">PID<br><strong>Kp, Ki, Kd</strong></div><div class="bd-arrow">→</div>
+      <div class="bd-node">Actuator<br><strong>u(t)</strong></div><div class="bd-arrow">→</div>
+      <div class="bd-node">Plant<br><strong>G(s)</strong></div><div class="bd-arrow">→</div>
+      <div class="bd-node">Output<br><strong>y(t)</strong></div>
+      <div class="bd-feedback">Feedback: measured output y(t) returns to the summing junction (negative feedback).</div>
+    </div>
+  </div></details>
+  <div class="two">
+    <aside><section class="card">
+      <h2>PID controls</h2>
+      <div class="field"><label for="p1Plant">Plant model</label><select id="p1Plant"><option value="first">First-order (Module 1)</option><option value="second">Second-order (Module 3)</option></select></div>
+      <div class="field"><label for="p1K">Plant gain K</label><input id="p1K" type="range" min="0.5" max="3" step="0.1" value="1"><small id="p1KVal">1.0</small></div>
+      <div class="field"><label for="p1Tau">Time constant τ (s)</label><input id="p1Tau" type="range" min="0.2" max="5" step="0.1" value="1"><small id="p1TauVal">1.0 s</small></div>
+      <div class="field"><label for="p1Zeta">Damping ratio ζ (second-order)</label><input id="p1Zeta" type="range" min="0.1" max="2" step="0.05" value="0.7"><small id="p1ZetaVal">0.70</small></div>
+      <div class="field"><label for="p1Wn">Natural frequency ωn (rad/s)</label><input id="p1Wn" type="range" min="0.5" max="8" step="0.1" value="2"><small id="p1WnVal">2.0</small></div>
+      <div class="field"><label for="p1Kp">Proportional Kp</label><input id="p1Kp" type="range" min="0" max="30" step="0.1" value="9"><small id="p1KpVal">9.0</small></div>
+      <div class="field"><label for="p1Ki">Integral Ki</label><input id="p1Ki" type="range" min="0" max="20" step="0.1" value="0"><small id="p1KiVal">0.0</small></div>
+      <div class="field"><label for="p1Kd">Derivative Kd</label><input id="p1Kd" type="range" min="0" max="10" step="0.05" value="0"><small id="p1KdVal">0.00</small></div>
+      <div class="field"><label for="p1Set">Setpoint</label><input id="p1Set" type="range" min="0.2" max="3" step="0.1" value="1"><small id="p1SetVal">1.0</small></div>
+      <div class="field"><label for="p1Limit">Control limit (±)</label><input id="p1Limit" type="range" min="1" max="100" step="1" value="100"><small id="p1LimitVal">±100</small></div>
+    </section></aside>
+    <div>
+      <section class="card"><h2>Closed-loop response</h2><p class="muted">Change one gain at a time. Start with P only, then add I and D.</p><div class="chart-wrap"><canvas id="p1Response"></canvas></div></section>
+      <section class="card"><h2>Control signal u(t)</h2><div class="chart-wrap sm"><canvas id="p1Control"></canvas></div>
+        <div class="metric-grid wide">
+          <div class="metric"><small>Rise time (10–90%)</small><strong id="p1Rise">—</strong></div>
+          <div class="metric"><small>Overshoot</small><strong id="p1Over">—</strong></div>
+          <div class="metric"><small>Settling time (±2%)</small><strong id="p1Settle">—</strong></div>
+          <div class="metric"><small>Steady-state error</small><strong id="p1Sse">—</strong></div>
+        </div>
+      </section>
+      <section class="card"><h2>Predict, then check</h2><p>With P-only control, increasing Kp should make the response faster but generally leaves a nonzero steady-state error. Predict the steady-state error percentage for the validation case K = 1, τ = 1, Kp = 9.</p>
+        <div class="predict-row"><div><label for="p1Prediction">Predicted error (%)</label><input id="p1Prediction" type="number" min="0" max="100" step="0.1" placeholder="Your prediction"></div><button id="p1Check">Check prediction</button></div><div class="result" id="p1PredictResult">Enter a prediction to check it.</div>
+      </section>
+      <section class="card"><h2>Validation checks</h2><div class="validation" id="p1Validation"></div></section>
+    </div>
+  </div>
+</section>
+<section class="mod" id="mod6">
+  <details class="card"><summary>Why a slow sensor affects feedback</summary><div class="body">
+    <div class="formula">Plant: τp dy/dt + y = Ku<br>Sensor: τs dyₘ/dt + yₘ = y<br>Controller error: e(t) = r(t) − yₘ(t)</div>
+    <p class="muted">The controller only sees the sensor reading yₘ. A slow sensor adds phase lag to the feedback path, so the controller reacts to an outdated measurement. This can increase overshoot and may cause oscillation.</p>
+  </div></details>
+  <div class="two">
+    <aside><section class="card"><h2>Loop controls</h2>
+      <div class="field"><label for="p2TauS">Sensor time constant τs (s)</label><input id="p2TauS" type="range" min="0.01" max="3" step="0.01" value="0.1"><small id="p2TauSVal">0.10 s</small></div>
+      <div class="field"><label for="p2TauP">Plant time constant τp (s)</label><input id="p2TauP" type="range" min="0.2" max="3" step="0.1" value="1"><small id="p2TauPVal">1.00 s</small></div>
+      <div class="field"><label for="p2Kp">Proportional Kp</label><input id="p2Kp" type="range" min="0" max="30" step="0.1" value="9"><small id="p2KpVal">9.0</small></div>
+      <div class="field"><label for="p2Ki">Integral Ki</label><input id="p2Ki" type="range" min="0" max="20" step="0.1" value="0"><small id="p2KiVal">0.0</small></div>
+      <div class="field"><label for="p2Kd">Derivative Kd</label><input id="p2Kd" type="range" min="0" max="10" step="0.05" value="0"><small id="p2KdVal">0.00</small></div>
+      <div class="field"><label for="p2Limit">Control limit (±)</label><input id="p2Limit" type="range" min="1" max="100" step="1" value="100"><small id="p2LimitVal">±100</small></div>
+    </section></aside>
+    <div>
+      <section class="card"><h2>True output vs sensor reading</h2><p class="muted">Both signals are plotted together. Increase τs gradually and observe the gap between the true plant output and the delayed measurement.</p><div class="chart-wrap"><canvas id="p2Chart"></canvas></div></section>
+      <section class="card"><h2>Control signal</h2><div class="chart-wrap sm"><canvas id="p2Control"></canvas></div><div class="metric-grid wide">
+        <div class="metric"><small>True-output overshoot</small><strong id="p2Over">—</strong></div><div class="metric"><small>Final true-output error</small><strong id="p2Error">—</strong></div><div class="metric"><small>Sensor lag at final time</small><strong id="p2Lag">—</strong></div><div class="metric"><small>Observed behavior</small><strong id="p2Behavior">—</strong></div>
+      </div></section>
+      <section class="card"><h2>Predict, then check</h2><p>If τs increases while the PID gains stay unchanged, what is likely to happen to the true output?</p><div class="field"><label for="p2Prediction">Your prediction</label><select id="p2Prediction"><option value="">Choose an answer</option><option value="less">Overshoot generally decreases</option><option value="more">Overshoot generally increases and oscillation may appear</option><option value="same">The response is unchanged</option></select></div><button id="p2Check">Check prediction</button><div class="result" id="p2PredictResult">Choose an answer, then check.</div></section>
+    </div>
+  </div>
+</section>
+
 </main>
 <footer>ENCS4380 · Interactive educational toolkit · Modules 1–4</footer>
 
@@ -799,19 +898,21 @@ document.querySelectorAll('.mtab').forEach(tb=>tb.addEventListener('click',()=>{
 }));
 
 /* ---------- module navigation ---------- */
-const SUBS=['Module 1: First-Order Time Response (Thermometer)','Module 2: First-Order Frequency Response','Module 3: Second-Order Response (Accelerometer, Spring)','Module 4: Guess the Sensor Challenge'];
+const SUBS=['Module 1: First-Order Time Response (Thermometer)','Module 2: First-Order Frequency Response','Module 3: Second-Order Response (Accelerometer, Spring)','Module 4: Guess the Sensor Challenge','Module 5: PID Playground','Module 6: Slow Sensor in the Loop'];
 function showMod(i,push){
-  document.querySelectorAll('.mod').forEach(s=>s.classList.toggle('on',s.id==='mod'+i));
-  document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('on',+b.dataset.mod===i));
-  $('subtitle').textContent='ENCS4380 · '+SUBS[i-1];
-  if(push)history.replaceState(null,'','#mod'+i);
+  const key=String(i);
+  document.querySelectorAll('.mod').forEach(s=>s.classList.toggle('on',s.id==='mod'+key));
+  document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('on',b.dataset.mod===key));
+  $('subtitle').textContent='ENCS4380 · '+(key==='control'?'Control · Homework 2':SUBS[Number(key)-1]);
+  if(push)history.replaceState(null,'',key==='control'?'#control':'#mod'+key);
   window.scrollTo({top:0,behavior:'smooth'});
-  requestAnimationFrame(()=>{Object.values(Chart.instances).forEach(c=>c.resize());if(i===2)upd2();if(i===3)upd3();if(i===4)window.refreshModule4?.()});
+  requestAnimationFrame(()=>{Object.values(Chart.instances).forEach(c=>c.resize());if(key==='2')upd2();if(key==='3')upd3();if(key==='4')window.refreshModule4?.();if(key==='5'||key==='6')window.refreshControlModules?.()});
 }
-document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>showMod(+b.dataset.mod,true)));
-window.addEventListener('hashchange',()=>{const m=/^#mod([1234])$/.exec(location.hash);if(m)showMod(+m[1],false)});
+document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>showMod(b.dataset.mod,true)));
+document.querySelectorAll('[data-open-mod]').forEach(b=>b.addEventListener('click',()=>showMod(b.dataset.openMod,true)));
+window.addEventListener('hashchange',()=>{const m=/^#mod([123456])$/.exec(location.hash);if(m)showMod(m[1],false);else if(location.hash==='#control')showMod('control',false)});
 upd2();calc2();upd3();
-{const m=/^#mod([1234])$/.exec(location.hash);if(m)showMod(+m[1],false)}
+{const m=/^#mod([123456])$/.exec(location.hash);if(m)showMod(m[1],false);else if(location.hash==='#control')showMod('control',false)}
 </script>
 
 <script>
@@ -834,5 +935,63 @@ $('hintBtn').addEventListener('click',()=>{const c=current;if(!c||c.revealed)ret
 window.refreshModule4=()=>render();
 })();
 </script>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const fmt=(v,n=2)=>Number.isFinite(v)?v.toFixed(n):'—';
+const chart=(id,sets)=>new Chart($(id),{type:'line',data:{datasets:sets},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom'}},scales:{x:{type:'linear',title:{display:true,text:'Time (s)'}},y:{title:{display:true,text:'Output'}}}}});
+let c1r,c1u,c2r,c2u;
+const bindRange=(ids,fn)=>ids.forEach(id=>$(id).addEventListener('input',fn));
+function simulatePID({K=1,tau=1,kp=9,ki=0,kd=0,set=1,limit=100,plant='first',zeta=.7,wn=2,sensorTau=0}){
+ const dt=.005,T=10,N=Math.round(T/dt), data=[],measured=[],control=[];
+ let y=0,v=0,ym=0,integ=0,prevE=set,prevY=0,maxY=0,first10=null,first90=null,lastOutside=0;
+ for(let i=0;i<=N;i++){
+  const t=i*dt,e=set-ym,deriv=(e-prevE)/dt;
+  const raw=kp*e+ki*integ+kd*deriv,u=Math.max(-limit,Math.min(limit,raw));
+  if(Math.abs(raw-u)<1e-8 || Math.sign(e)!==Math.sign(raw-u))integ+=e*dt;
+  if(plant==='first'){y+=dt*((K*u-y)/tau);}
+  else {const acc=wn*wn*(K*u-y)-2*zeta*wn*v;v+=dt*acc;y+=dt*v;}
+  if(sensorTau>0)ym+=dt*((y-ym)/sensorTau);else ym=y;
+  if(i%10===0){data.push({x:t,y});measured.push({x:t,y:ym});control.push({x:t,y:u});}
+  maxY=Math.max(maxY,y);
+  if(first10===null&&y>=.1*set)first10=t;
+  if(first90===null&&y>=.9*set)first90=t;
+  if(Math.abs(y-set)>.02*Math.max(Math.abs(set),.001))lastOutside=t;
+  prevE=e;prevY=y;
+ }
+ const peak=Math.max(0,(maxY-set)/Math.max(Math.abs(set),.001)*100);
+ const finalErr=Math.abs(set-y);
+ return {data,measured,control,rise:first10!==null&&first90!==null?first90-first10:NaN,over:peak,settle:lastOutside<T?lastOutside:NaN,sse:finalErr,final:y,ym};
+}
+function updateP1(){
+ const g={K:+$('p1K').value,tau:+$('p1Tau').value,kp:+$('p1Kp').value,ki:+$('p1Ki').value,kd:+$('p1Kd').value,set:+$('p1Set').value,limit:+$('p1Limit').value,plant:$('p1Plant').value,zeta:+$('p1Zeta').value,wn:+$('p1Wn').value};
+ [['p1K','p1KVal',1],['p1Tau','p1TauVal',2],['p1Zeta','p1ZetaVal',2],['p1Wn','p1WnVal',1],['p1Kp','p1KpVal',1],['p1Ki','p1KiVal',1],['p1Kd','p1KdVal',2],['p1Set','p1SetVal',1],['p1Limit','p1LimitVal',0]].forEach(([a,b,n])=>$(b).textContent=a==='p1Limit'?'±'+fmt(g.limit,0):fmt(g[a.slice(2).toLowerCase()]??+$(a).value,n)+(a==='p1Tau'?' s':''));
+ const r=simulatePID(g);
+ if(c1r)c1r.destroy();if(c1u)c1u.destroy();
+ c1r=chart('p1Response',[{label:'Setpoint',data:[{x:0,y:g.set},{x:10,y:g.set}],borderDash:[6,5],pointRadius:0,borderColor:'#999'},{label:'Plant output',data:r.data,pointRadius:0,borderWidth:2,borderColor:'#d9477f'}]);
+ c1u=chart('p1Control',[{label:'Control u(t)',data:r.control,pointRadius:0,borderWidth:2,borderColor:'#7c5ce7'},{label:'Upper limit',data:[{x:0,y:g.limit},{x:10,y:g.limit}],pointRadius:0,borderDash:[5,5]},{label:'Lower limit',data:[{x:0,y:-g.limit},{x:10,y:-g.limit}],pointRadius:0,borderDash:[5,5]}]);
+ $('p1Rise').textContent=fmt(r.rise)+' s';$('p1Over').textContent=fmt(r.over)+'%';$('p1Settle').textContent=fmt(r.settle)+' s';$('p1Sse').textContent=fmt(r.sse);
+}
+function updateP2(){
+ const g={K:1,tau:+$('p2TauP').value,kp:+$('p2Kp').value,ki:+$('p2Ki').value,kd:+$('p2Kd').value,set:1,limit:+$('p2Limit').value,sensorTau:+$('p2TauS').value};
+ [['p2TauS','p2TauSVal',2],['p2TauP','p2TauPVal',2],['p2Kp','p2KpVal',1],['p2Ki','p2KiVal',1],['p2Kd','p2KdVal',2],['p2Limit','p2LimitVal',0]].forEach(([a,b,n])=>$(b).textContent=a==='p2Limit'?'±'+fmt(+$(a).value,0):fmt(+$(a).value,n)+(a.includes('Tau')?' s':''));
+ const r=simulatePID(g);
+ if(c2r)c2r.destroy();if(c2u)c2u.destroy();
+ c2r=chart('p2Chart',[{label:'True plant output y(t)',data:r.data,pointRadius:0,borderWidth:2,borderColor:'#d9477f'},{label:'Sensor measurement ym(t)',data:r.measured,pointRadius:0,borderWidth:2,borderColor:'#4c83d8'}]);
+ c2u=chart('p2Control',[{label:'Control u(t)',data:r.control,pointRadius:0,borderWidth:2}]);
+ $('p2Over').textContent=fmt(r.over)+'%';$('p2Error').textContent=fmt(r.sse);$('p2Lag').textContent=fmt(Math.abs(r.final-r.ym));$('p2Behavior').textContent=r.over>20?'Large overshoot':r.over>5?'Overshoot':'Stable-looking';
+}
+function measureAt(data,i,tau){if(tau<=0)return data[i].y;let val=0,dt=.05;for(let j=0;j<=i;j++){const target=data[j].y;val+=(target-val)*Math.min(1,dt/tau);}return val;}
+bindRange(['p1K','p1Tau','p1Zeta','p1Wn','p1Kp','p1Ki','p1Kd','p1Set','p1Limit'],updateP1);$('p1Plant').addEventListener('change',updateP1);
+bindRange(['p2TauS','p2TauP','p2Kp','p2Ki','p2Kd','p2Limit'],updateP2);
+$('p1Check').addEventListener('click',()=>{const v=+$('p1Prediction').value;const err=Math.abs(v-10);$('p1PredictResult').textContent=Number.isFinite(v)&&$('p1Prediction').value!==''?(err<1?'Correct. ':'Not quite. ')+'For K=1 and Kp=9, steady-state error = 1/(1+KpK) = 1/10 = 10%.':'Enter a valid percentage.';});
+$('p2Check').addEventListener('click',()=>{$('p2PredictResult').textContent=$('p2Prediction').value==='more'?'Correct. Sensor lag adds delay in the feedback path and can increase overshoot or cause oscillation.':'The expected answer is that overshoot generally increases and oscillation may appear as sensor lag grows.';});
+$('p1Validation').innerHTML='<div class="test"><strong>1. P-only closed-loop time constant</strong><p>τcl = τ/(1 + KKp) = 1/(1 + 1×9).</p><span class="pass">Calculated: 0.10 s ✓</span></div><div class="test"><strong>2. P-only steady-state error</strong><p>ess = 1/(1 + KKp) = 1/10.</p><span class="pass">Calculated: 10% ✓</span></div><div class="test"><strong>3. PI step steady-state error</strong><p>For a stable PI-controlled loop with Ki &gt; 0, integral action removes the step steady-state error.</p><span class="pass">Expected: 0% ✓</span></div><div class="test"><strong>PI parameter check</strong><p>For Kp = 1, Ki = 1, K = 1, τ = 1: ωn = √(KKi/τ) = 1 rad/s and ζ = (1 + KKp)/(2√(τKKi)) = 1.</p><span class="pass">Calculated: ωn = 1, ζ = 1 ✓</span></div>';
+updateP1();updateP2();
+window.refreshControlModules=()=>{updateP1();updateP2()};
+})();
+</script>
+
 </body>
 </html>

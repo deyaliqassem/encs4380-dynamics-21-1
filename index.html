@@ -480,6 +480,10 @@ button.ghost{background:var(--chip);color:var(--deep);border:1px solid var(--lin
         <p>Tune a PID controller to meet three targets for a mystery plant.</p>
         <button type="button" data-open-mod="8">Open Tuning Challenge</button>
       </article>
+      <article class="card" style="margin:0">
+        <h2>My system</h2>
+        <button type="button" data-open-mod="9">Open Micromouse motor</button>
+      </article>
     </div>
   </section>
 </section>
@@ -653,6 +657,26 @@ button.ghost{background:var(--chip);color:var(--deep);border:1px solid var(--lin
   </div>
 </section>
 
+<section class="mod" id="mod9">
+  <section class="card">
+    <h2>My system · Micromouse drive motor</h2>
+    <p>Simulation example. The team has yet to run an encoder step test.
+       The model values below are illustrative.</p>
+    <div class="formula">G(s) = K/(τs + 1), with K = 1 in normalized units and τ = 1 s.</div>
+    <p>To identify the motor, apply a fixed PWM step and record encoder speed over time.
+       Estimate K from the steady speed change divided by the duty change.
+       Estimate τ from the time to reach 63.2% of the steady speed change.</p>
+    <p>Design target: track 40% normalized speed with damping ratio ζ = 0.70.
+       A damped response helps the wheels reach the requested speed without a large overshoot.
+       Keep PWM duty between 0% and 100%.</p>
+    <p>Illustrative PI tuning: Kp = 1.8, Ki = 4, Kd = 0. With ωₙ = 2 rad/s,
+       the example model gives ζ = (1 + K·Kp)/(2τωₙ) = 0.70.</p>
+    <div class="chart-wrap" style="height:300px">
+      <canvas id="motorExampleChart" aria-label="Simulated normalized motor speed and PWM duty" role="img"></canvas>
+    </div>
+    <p id="motorExampleDuty"></p>
+  </section>
+</section>
 </main>
 <footer>ENCS4380 · Interactive educational toolkit · Modules 1–4</footer>
 
@@ -1009,7 +1033,7 @@ document.querySelectorAll('.mtab').forEach(tb=>tb.addEventListener('click',()=>{
 }));
 
 /* ---------- module navigation ---------- */
-const SUBS=['Module 1: First-Order Time Response (Thermometer)','Module 2: First-Order Frequency Response','Module 3: Second-Order Response (Accelerometer, Spring)','Module 4: Guess the Sensor Challenge','Module 5: PID Playground','Module 6: Slow Sensor in the Loop','P3: Digital PID','P4: Tuning Challenge'];
+const SUBS=['Module 1: First-Order Time Response (Thermometer)','Module 2: First-Order Frequency Response','Module 3: Second-Order Response (Accelerometer, Spring)','Module 4: Guess the Sensor Challenge','Module 5: PID Playground','Module 6: Slow Sensor in the Loop','P3: Digital PID','P4: Tuning Challenge','My system: Micromouse drive motor'];
 function showMod(i,push){
   const key=String(i);
   document.querySelectorAll('.mod').forEach(s=>s.classList.toggle('on',s.id==='mod'+key));
@@ -1019,13 +1043,14 @@ function showMod(i,push){
   window.scrollTo({top:0,behavior:'smooth'});
     if (key === '7') requestAnimationFrame(() => window.refreshP3?.());
     if (key === '8') requestAnimationFrame(() => window.refreshP4?.());
+    if (key === '9') requestAnimationFrame(() => window.refreshMotorExample?.());
   requestAnimationFrame(()=>{Object.values(Chart.instances).forEach(c=>c.resize());if(key==='2')upd2();if(key==='3')upd3();if(key==='4')window.refreshModule4?.();if(key==='5'||key==='6')window.refreshControlModules?.()});
 }
 document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>showMod(b.dataset.mod,true)));
 document.querySelectorAll('[data-open-mod]').forEach(b=>b.addEventListener('click',()=>showMod(b.dataset.openMod,true)));
-window.addEventListener('hashchange',()=>{const m=/^#mod([12345678])$/.exec(location.hash);if(m)showMod(m[1],false);else if(location.hash==='#control')showMod('control',false)});
+window.addEventListener('hashchange',()=>{const m=/^#mod([123456789])$/.exec(location.hash);if(m)showMod(m[1],false);else if(location.hash==='#control')showMod('control',false)});
 upd2();calc2();upd3();
-{const m=/^#mod([12345678])$/.exec(location.hash);if(m)showMod(m[1],false);else if(location.hash==='#control')showMod('control',false)}
+{const m=/^#mod([123456789])$/.exec(location.hash);if(m)showMod(m[1],false);else if(location.hash==='#control')showMod('control',false)}
 </script>
 
 <script>
@@ -1061,12 +1086,12 @@ const fmt=(v,n=2)=>Number.isFinite(v)?v.toFixed(n):'—';
 const chart=(id,sets)=>new Chart($(id),{type:'line',data:{datasets:sets},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom'}},scales:{x:{type:'linear',title:{display:true,text:'Time (s)'}},y:{title:{display:true,text:'Output'}}}}});
 let c1r,c1u,c2r,c2u;
 const bindRange=(ids,fn)=>ids.forEach(id=>$(id).addEventListener('input',fn));
-function simulatePID({K=1,tau=1,kp=9,ki=0,kd=0,set=1,limit=100,plant='first',zeta=.7,wn=2,sensorTau=0}){
+function simulatePID({K=1,tau=1,kp=9,ki=0,kd=0,set=1,limit=100,lowerLimit=-limit,plant='first',zeta=.7,wn=2,sensorTau=0}){
  const dt=.005,T=10,N=Math.round(T/dt), data=[],measured=[],control=[];
  let y=0,v=0,ym=0,integ=0,prevE=set,prevY=0,maxY=0,first10=null,first90=null,lastOutside=0;
  for(let i=0;i<=N;i++){
   const t=i*dt,e=set-ym,deriv=(e-prevE)/dt;
-  const raw=kp*e+ki*integ+kd*deriv,u=Math.max(-limit,Math.min(limit,raw));
+  const raw=kp*e+ki*integ+kd*deriv,u=Math.max(lowerLimit,Math.min(limit,raw));
   if(Math.abs(raw-u)<1e-8 || Math.sign(e)!==Math.sign(raw-u))integ+=e*dt;
   if(plant==='first'){y+=dt*((K*u-y)/tau);}
   else {const acc=wn*wn*(K*u-y)-2*zeta*wn*v;v+=dt*acc;y+=dt*v;}
@@ -1169,6 +1194,28 @@ $('p4New').addEventListener('click', () => {
 
 window.refreshP4 = refreshP4;
 if ($('mod8').classList.contains('on')) requestAnimationFrame(refreshP4);
+let motorChart;
+function refreshMotorExample() {
+  if (motorChart) {
+    motorChart.resize();
+    return;
+  }
+
+  const response = simulatePID({K: 1, tau: 1, kp: 1.8, ki: 4, kd: 0,
+    set: .4, limit: 1, lowerLimit: 0});
+  const duty = response.control.map(point => point.y);
+  $('motorExampleDuty').textContent =
+    `PWM duty shown in the simulation: ${(100 * Math.min(...duty)).toFixed(1)}% to ${(100 * Math.max(...duty)).toFixed(1)}%.`;
+  motorChart = chart('motorExampleChart', [
+    {label: 'Speed setpoint', data: [{x: 0, y: .4}, {x: 10, y: .4}],
+      borderColor: '#888', borderDash: [6, 5], pointRadius: 0},
+    {label: 'Normalized speed', data: response.data, borderColor: '#d9477f', pointRadius: 0},
+    {label: 'PWM duty (0–1)', data: response.control, borderColor: '#7c5ce7', pointRadius: 0}
+  ]);
+}
+window.refreshMotorExample = refreshMotorExample;
+if ($('mod9').classList.contains('on')) requestAnimationFrame(refreshMotorExample);
+
 
 })();
 </script>

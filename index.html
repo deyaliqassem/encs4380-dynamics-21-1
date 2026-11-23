@@ -1175,6 +1175,7 @@ void loop() {
 
   inputIds.forEach(id => byId(id).addEventListener('input', update));
     window.refreshP3 = update;
+    if (byId('mod7').classList.contains('on')) requestAnimationFrame(() => { if (!responseChart) update(); });
     byId('p3CopyCode').addEventListener('click', async () => {
     const status = byId('p3CopyStatus');
     try {

@@ -469,6 +469,11 @@ button.ghost{background:var(--chip);color:var(--deep);border:1px solid var(--lin
         <p>Compare the true plant output with the delayed sensor measurement and observe how sensor time constant affects feedback behavior.</p>
         <button type="button" data-open-mod="6">Open Slow Sensor</button>
       </article>
+      <article class="card" style="margin:0">
+  <h2>P3 · Digital PID</h2>
+  <p>Explore how sampling time affects the digital PID response.</p>
+  <button type="button" data-open-mod="7">Open Digital PID</button>
+</article>
     </div>
   </section>
 </section>
@@ -541,7 +546,54 @@ button.ghost{background:var(--chip);color:var(--deep);border:1px solid var(--lin
     </div>
   </div>
 </section>
+<section class="mod" id="mod7">
+  <section class="card">
+    <h2>P3 · Digital PID</h2>
 
+    <div class="field">
+      <label for="p3Ts">Sampling time Ts (s)</label>
+      <input id="p3Ts" type="range" min="0.02" max="1" step="0.01" value="0.02">
+      <output id="p3TsVal" for="p3Ts">0.02 s</output>
+    </div>
+    <div class="field">
+  <label for="p3Kp">Proportional gain (Kp)</label>
+  <input id="p3Kp" type="number" min="0" max="30" step="0.1" value="4">
+</div>
+<div class="field">
+  <label for="p3Ki">Integral gain (Ki)</label>
+  <input id="p3Ki" type="number" min="0" max="20" step="0.1" value="2">
+</div>
+<div class="field">
+  <label for="p3Kd">Derivative gain (Kd)</label>
+  <input id="p3Kd" type="number" min="0" max="10" step="0.05" value="0">
+</div>
+<div class="field">
+  <label><input id="p3AntiWindup" type="checkbox" checked> Enable anti-windup</label>
+</div>
+    <h3>Plant output vs. setpoint</h3>
+<div class="chart-wrap">
+  <canvas id="p3Response"></canvas>
+</div>
+
+<h3>Control signal u</h3>
+<div class="chart-wrap sm">
+  <canvas id="p3Control"></canvas>
+</div>
+   <h3>Predict, then check</h3>
+<p>Keep the PID gains fixed. If Ts increases from 0.02 s to 0.50 s,
+  will each step in the control signal get wider or narrower?</p>
+<details>
+  <summary>Check your prediction</summary>
+  <p>Wider. The controller holds each value of u for 0.50 s instead of
+    0.02 s. Move the Ts slider to compare the two plots.</p>
+</details> 
+    <h3>Arduino PID loop</h3>
+<p>The code uses the current sampling time, PID gains, and anti-windup setting.</p>
+<button type="button" id="p3CopyCode">Copy Arduino code</button>
+<span id="p3CopyStatus" role="status"></span>
+<pre style="overflow-x:auto"><code id="p3ArduinoCode"></code></pre>
+  </section>
+</section>
 </main>
 <footer>ENCS4380 · Interactive educational toolkit · Modules 1–4</footer>
 
@@ -898,7 +950,7 @@ document.querySelectorAll('.mtab').forEach(tb=>tb.addEventListener('click',()=>{
 }));
 
 /* ---------- module navigation ---------- */
-const SUBS=['Module 1: First-Order Time Response (Thermometer)','Module 2: First-Order Frequency Response','Module 3: Second-Order Response (Accelerometer, Spring)','Module 4: Guess the Sensor Challenge','Module 5: PID Playground','Module 6: Slow Sensor in the Loop'];
+const SUBS=['Module 1: First-Order Time Response (Thermometer)','Module 2: First-Order Frequency Response','Module 3: Second-Order Response (Accelerometer, Spring)','Module 4: Guess the Sensor Challenge','Module 5: PID Playground','Module 6: Slow Sensor in the Loop','P3: Digital PID'];
 function showMod(i,push){
   const key=String(i);
   document.querySelectorAll('.mod').forEach(s=>s.classList.toggle('on',s.id==='mod'+key));
@@ -906,13 +958,14 @@ function showMod(i,push){
   $('subtitle').textContent='ENCS4380 · '+(key==='control'?'Control · Homework 2':SUBS[Number(key)-1]);
   if(push)history.replaceState(null,'',key==='control'?'#control':'#mod'+key);
   window.scrollTo({top:0,behavior:'smooth'});
+    if (key === '7') requestAnimationFrame(() => window.refreshP3?.());
   requestAnimationFrame(()=>{Object.values(Chart.instances).forEach(c=>c.resize());if(key==='2')upd2();if(key==='3')upd3();if(key==='4')window.refreshModule4?.();if(key==='5'||key==='6')window.refreshControlModules?.()});
 }
 document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>showMod(b.dataset.mod,true)));
 document.querySelectorAll('[data-open-mod]').forEach(b=>b.addEventListener('click',()=>showMod(b.dataset.openMod,true)));
-window.addEventListener('hashchange',()=>{const m=/^#mod([123456])$/.exec(location.hash);if(m)showMod(m[1],false);else if(location.hash==='#control')showMod('control',false)});
+window.addEventListener('hashchange',()=>{const m=/^#mod([1234567])$/.exec(location.hash);if(m)showMod(m[1],false);else if(location.hash==='#control')showMod('control',false)});
 upd2();calc2();upd3();
-{const m=/^#mod([123456])$/.exec(location.hash);if(m)showMod(m[1],false);else if(location.hash==='#control')showMod('control',false)}
+{const m=/^#mod([1234567])$/.exec(location.hash);if(m)showMod(m[1],false);else if(location.hash==='#control')showMod('control',false)}
 </script>
 
 <script>
@@ -992,6 +1045,149 @@ updateP1();updateP2();
 window.refreshControlModules=()=>{updateP1();updateP2()};
 })();
 </script>
+  <script>
+(() => {
+  const byId = id => document.getElementById(id);
+  const inputIds = ['p3Ts', 'p3Kp', 'p3Ki', 'p3Kd', 'p3AntiWindup'];
+  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+  const duration = 10;
+  const setpoint = 1;
+  const plantGain = 1;
+  const tau = 1;
+  const limit = 2;
+
+  function makeChart(id, label, datasets) {
+    return new Chart(byId(id), {
+      type: 'line',
+      data: { datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        elements: { point: { radius: 0 } },
+        scales: {
+          x: { type: 'linear', title: { display: true, text: 'Time (s)' } },
+          y: { title: { display: true, text: label } }
+        }
+      }
+    });
+  }
+
+  let responseChart;
+  let controlChart;
+
+  function update() {
+    const ts = Number(byId('p3Ts').value);
+    const kp = clamp(Number(byId('p3Kp').value), 0, 30);
+    const ki = clamp(Number(byId('p3Ki').value), 0, 20);
+    const kd = clamp(Number(byId('p3Kd').value), 0, 10);
+    const antiWindup = byId('p3AntiWindup').checked;
+        byId('p3ArduinoCode').textContent = `// Connect these two functions to your sensor and actuator.
+float readOutput();
+void writeControl(float u);
+
+const float Ts = ${ts.toFixed(2)};
+const float Kp = ${kp};
+const float Ki = ${ki};
+const float Kd = ${kd};
+const float setpoint = ${setpoint};
+const float limit = ${limit};
+const bool antiWindup = ${antiWindup};
+const unsigned long sampleUs = ${Math.round(ts * 1e6)}UL;
+
+float integral = 0.0;
+float previousError = setpoint;
+
+void loop() {
+  static unsigned long lastSample = micros() - sampleUs;
+  const unsigned long now = micros();
+  if (now - lastSample < sampleUs) return;
+  lastSample = now;
+
+  const float error = setpoint - readOutput();
+  const float derivative = (error - previousError) / Ts;
+  const float nextIntegral = integral + error * Ts;
+  const float candidate = Kp * error + Ki * nextIntegral + Kd * derivative;
+  const bool pushesPastLimit =
+      (candidate > limit && error > 0) ||
+      (candidate < -limit && error < 0);
+
+  if (!antiWindup || !pushesPastLimit) integral = nextIntegral;
+
+  const float raw = Kp * error + Ki * integral + Kd * derivative;
+  const float u = constrain(raw, -limit, limit);
+  writeControl(u);
+  previousError = error;
+}`;
+    byId('p3TsVal').textContent = `${ts.toFixed(2)} s`;
+
+    let y = 0;
+    let integral = 0;
+    let previousError = setpoint;
+    const output = [{ x: 0, y }];
+    const control = [];
+
+    for (let k = 0; k * ts < duration; k++) {
+      const t = k * ts;
+      const end = Math.min(t + ts, duration);
+      const error = setpoint - y;
+      const derivative = (error - previousError) / ts;
+      const nextIntegral = integral + error * ts;
+      const candidate = kp * error + ki * nextIntegral + kd * derivative;
+      const pushesPastLimit =
+        (candidate > limit && error > 0) ||
+        (candidate < -limit && error < 0);
+
+      if (!antiWindup || !pushesPastLimit) integral = nextIntegral;
+
+      const u = clamp(kp * error + ki * integral + kd * derivative, -limit, limit);
+      control.push({ x: t, y: u });
+
+      // Integrate the plant with Euler steps while the controller holds u.
+      const steps = Math.ceil((end - t) / 0.005);
+      const dt = (end - t) / steps;
+      for (let i = 1; i <= steps; i++) {
+        y += dt * (plantGain * u - y) / tau;
+        output.push({ x: t + i * dt, y });
+      }
+
+      previousError = error;
+    }
+
+    control.push({ x: duration, y: control[control.length - 1].y });
+
+    if (!responseChart) {
+      responseChart = makeChart('p3Response', 'Output', [
+        { label: 'Plant output', borderColor: '#d9477f', data: [] },
+        { label: 'Setpoint', borderColor: '#777', borderDash: [5, 5],
+          data: [{ x: 0, y: setpoint }, { x: duration, y: setpoint }] }
+      ]);
+      controlChart = makeChart('p3Control', 'Control signal', [
+        { label: 'Held control signal u', borderColor: '#7c5ce7', stepped: true, data: [] }
+      ]);
+    }
+
+    responseChart.data.datasets[0].data = output;
+    controlChart.data.datasets[0].data = control;
+    responseChart.update();
+    controlChart.update();
+  }
+
+  inputIds.forEach(id => byId(id).addEventListener('input', update));
+    window.refreshP3 = update;
+    byId('p3CopyCode').addEventListener('click', async () => {
+    const status = byId('p3CopyStatus');
+    try {
+      await navigator.clipboard.writeText(byId('p3ArduinoCode').textContent);
+      status.textContent = 'Copied!';
+    } catch {
+      status.textContent = 'Select the code and press Ctrl+C to copy.';
+    }
+  });
+ 
+})();
+</script>
+
 
 </body>
 </html>
